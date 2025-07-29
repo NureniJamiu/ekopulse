@@ -1,0 +1,427 @@
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import { API_BASE_URL, API_ENDPOINTS } from './constants';
+
+// Declare Clerk types for window object
+declare global {
+  interface Window {
+    Clerk?: {
+      loaded: boolean;
+      session?: {
+        getToken: () => Promise<string | null>;
+      };
+      load: () => Promise<void>;
+    };
+  }
+}
+
+// Create axios instance with default config
+const api: AxiosInstance = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  withCredentials: true, // Important for Clerk session cookies
+});
+
+// Request interceptor to add auth token
+api.interceptors.request.use(
+  async (config) => {
+    try {
+      console.log('[API] Making request to:', config.url);
+
+      // Handle FormData requests - remove Content-Type to let browser set it with boundary
+      if (config.data instanceof FormData) {
+        delete config.headers['Content-Type'];
+      }
+
+      // Check if this is a public route that doesn't need authentication
+      const publicRoutes = ['/issues', '/health', '/test', '/agencies/register'];
+      const isPublicRoute = publicRoutes.some(route =>
+        config.url === route || config.url?.endsWith(route)
+      );
+
+      // For public routes, don't require authentication but still add token if available
+      if (isPublicRoute) {
+        console.log('[API] Public route detected, proceeding without waiting for auth');
+        if (window.Clerk?.session) {
+          try {
+            const token = await window.Clerk.session.getToken();
+            if (token) {
+              config.headers.Authorization = `Bearer ${token}`;
+            }
+          } catch (tokenError) {
+            console.warn('[API] Could not get token for public route:', tokenError);
+          }
+        }
+        return config;
+      }
+
+      // For protected routes, wait for Clerk to be loaded with timeout
+      if (window.Clerk && !window.Clerk.loaded) {
+        console.log('[API] Waiting for Clerk to load...');
+        try {
+          await Promise.race([
+            window.Clerk.load(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Clerk load timeout')), 5000))
+          ]);
+        } catch (loadError) {
+          console.error('[API] Clerk failed to load within timeout:', loadError);
+          // Continue without authentication
+        }
+      }
+
+      // Check if Clerk is loaded and user is signed in
+      if (window.Clerk?.session) {
+        console.log('[API] Clerk session found, getting token...');
+        try {
+          // Get session token for API calls
+          const token = await window.Clerk.session.getToken();
+          if (token) {
+            console.log('[API] Token retrieved successfully');
+            config.headers.Authorization = `Bearer ${token}`;
+          } else {
+            console.warn('[API] No token returned from Clerk session');
+          }
+        } catch (tokenError) {
+          console.error('[API] Error getting token:', tokenError);
+        }
+      } else {
+        console.warn('[API] No Clerk session found - user may not be authenticated');
+      }
+    } catch (error) {
+      console.error('Failed to get Clerk token:', error);
+      // Don't reject the request, just proceed without token
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor for error handling
+api.interceptors.response.use(
+  (response: AxiosResponse) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      console.error('Authentication error:', error.response.data);
+
+      // Don't automatically redirect if we're already on an auth page
+      const currentPath = window.location.pathname;
+      if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
+        // Show a toast error instead of immediately redirecting
+        import('react-hot-toast').then(({ default: toast }) => {
+          toast.error('Authentication failed. Please sign in again.');
+        });
+
+        // Add a small delay before redirecting to allow user to see the error
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Types
+export interface IssueType {
+  _id: string;
+  title: string;
+  description: string;
+  type: 'waste' | 'drainage' | 'pollution' | 'other';
+  status: 'reported' | 'under_review' | 'resolved';
+  location: {
+    type: 'Point';
+    coordinates: [number, number];
+  };
+  address: string;
+  imageUrl?: string;
+  reportedBy: {
+    _id: string;
+    firstName?: string;
+    lastName?: string;
+    email: string;
+    role: string;
+  };
+  assignedTo?: {
+    _id: string;
+    firstName?: string;
+    lastName?: string;
+    email: string;
+    role: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface User {
+  _id: string;
+  clerkId: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  role: 'citizen' | 'authority' | 'agency_admin';
+  agency?: string;
+  permissions?: string[];
+  isActive: boolean;
+  lastLoginAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateIssueData {
+  title: string;
+  description: string;
+  type: string;
+  coordinates: { lat: number; lng: number };
+  address: string;
+  image?: File;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  error?: string;
+}
+
+export interface PaginatedResponse<T> extends ApiResponse<T[]> {
+  pagination: {
+    total: number;
+    limit: number;
+    offset: number;
+  };
+}
+
+// API Functions
+export const authAPI = {
+  getOrCreateUser: async (userData: {
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    role?: string;
+  }): Promise<User> => {
+    const response = await api.post<ApiResponse<User>>(API_ENDPOINTS.auth.user, userData);
+    return response.data.data;
+  },
+
+  getCurrentUser: async (): Promise<User> => {
+    const response = await api.get<ApiResponse<User>>(API_ENDPOINTS.auth.user);
+    return response.data.data;
+  },
+
+  updateUserRole: async (role: 'citizen' | 'authority' | 'agency_admin'): Promise<User> => {
+    const response = await api.put<ApiResponse<User>>(API_ENDPOINTS.auth.updateRole, { role });
+    return response.data.data;
+  },
+};
+
+// Create agency-authenticated axios instance
+const apiWithAgencyAuth: AxiosInstance = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  withCredentials: true,
+});
+
+// Agency auth request interceptor
+apiWithAgencyAuth.interceptors.request.use(
+  async (config) => {
+    const sessionToken = localStorage.getItem('agencyToken');
+    if (sessionToken) {
+      config.headers.Authorization = `Bearer ${sessionToken}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Agency auth response interceptor
+apiWithAgencyAuth.interceptors.response.use(
+  (response: AxiosResponse) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Clear invalid session token
+      localStorage.removeItem('agencyToken');
+      localStorage.removeItem('agencyId');
+      localStorage.removeItem('agencyMongerId');
+      // Redirect to agency login tab
+      window.location.href = '/login?tab=agency';
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Issues API
+export const issuesAPI = {
+  getIssues: async (params?: {
+    status?: string;
+    type?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<PaginatedResponse<IssueType>> => {
+    const response = await api.get<PaginatedResponse<IssueType>>(API_ENDPOINTS.issues.list, { params });
+    return response.data;
+  },
+
+  getIssueById: async (id: string): Promise<IssueType> => {
+    const response = await api.get<ApiResponse<IssueType>>(API_ENDPOINTS.issues.byId(id));
+    return response.data.data;
+  },
+
+  createIssue: async (issueData: CreateIssueData): Promise<IssueType> => {
+    console.log('[API] Creating issue with data:', {
+      title: issueData.title,
+      type: issueData.type,
+      coordinates: issueData.coordinates,
+      hasImage: !!issueData.image
+    });
+
+    const formData = new FormData();
+    formData.append('title', issueData.title);
+    formData.append('description', issueData.description);
+    formData.append('type', issueData.type);
+    formData.append('coordinates', JSON.stringify(issueData.coordinates));
+    formData.append('address', issueData.address);
+
+    if (issueData.image) {
+      console.log('[API] Appending image to FormData:', {
+        name: issueData.image.name,
+        size: issueData.image.size,
+        type: issueData.image.type
+      });
+      formData.append('image', issueData.image);
+    }
+
+    // Log FormData contents for debugging
+    console.log('[API] FormData entries:');
+    for (const [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        console.log(`  ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
+      } else {
+        console.log(`  ${key}: ${value}`);
+      }
+    }
+
+    const response = await api.post<ApiResponse<IssueType>>(
+      API_ENDPOINTS.issues.create,
+      formData
+    );
+    return response.data.data;
+  },
+
+  updateIssueStatus: async (id: string, status: string): Promise<IssueType> => {
+    const response = await api.put<ApiResponse<IssueType>>(
+      API_ENDPOINTS.issues.updateStatus(id),
+      { status }
+    );
+    return response.data.data;
+  },
+
+  getUserIssues: async (): Promise<IssueType[]> => {
+    const response = await api.get<ApiResponse<IssueType[]>>(API_ENDPOINTS.issues.userReports);
+    return response.data.data;
+  },
+};
+
+export default api;
+
+// Agency API
+export const agencyAPI = {
+  createAgency: async (agencyData: {
+    name: string;
+    type: string;
+    description?: string;
+    email: string;
+    phone?: string;
+    address?: string;
+    serviceAreas?: Array<{
+      type: 'Polygon';
+      coordinates: number[][][];
+    }>;
+    issueTypes: string[];
+    contactPerson?: {
+      name: string;
+      email: string;
+      phone?: string;
+    };
+    workingHours?: {
+      start: string;
+      end: string;
+      days: string[];
+    };
+    priority?: number;
+  }) => {
+    // Use the public registration endpoint instead of the authenticated one
+    const response = await api.post('/agencies/register', agencyData);
+    return response.data.data;
+  },
+
+  getAgency: async (id: string) => {
+    const response = await api.get(`/agencies/${id}`);
+    return response.data.data;
+  },
+
+  getAgencyIssues: async (id: string, params?: { status?: string; type?: string; priority?: string; page?: number; limit?: number }) => {
+    const response = await api.get(`/agencies/${id}/issues`, { params });
+    return response.data.data;
+  },
+
+  getAgencyStats: async (id: string) => {
+    const response = await api.get(`/agencies/${id}/stats`);
+    return response.data.data;
+  },
+
+  getAllAgencies: async (params?: { type?: string; isActive?: boolean; issueType?: string }) => {
+    const response = await api.get('/agencies', { params });
+    return response.data.data;
+  },
+
+  assignIssue: async (issueId: string, agencyId: string) => {
+    const response = await api.post('/agencies/assign-issue', { issueId, agencyId });
+    return response.data.data;
+  },
+
+  // Agency session-authenticated endpoints
+  getMyAgencyIssues: async (params?: { status?: string; type?: string; priority?: string; page?: number; limit?: number }) => {
+    const response = await apiWithAgencyAuth.get('/agencies/my-issues', { params });
+    return response.data.data;
+  },
+
+  getMyAgencyStats: async () => {
+    const response = await apiWithAgencyAuth.get('/agencies/my-stats');
+    return response.data.data;
+  }
+};
+
+// Notification API
+export const notificationAPI = {
+  getNotifications: async (params?: { status?: string; type?: string; page?: number; limit?: number; recipientType?: string }) => {
+    const response = await api.get('/notifications', { params });
+    return response.data.data;
+  },
+
+  getUnreadCount: async (recipientType?: string) => {
+    const response = await api.get('/notifications/unread-count', {
+      params: recipientType ? { recipientType } : undefined
+    });
+    return response.data.data;
+  },
+
+  markAsRead: async (id: string) => {
+    const response = await api.put(`/notifications/${id}/read`);
+    return response.data;
+  },
+
+  markAllAsRead: async (recipientType?: string) => {
+    const response = await api.put('/notifications/mark-all-read',
+      recipientType ? { recipientType } : {}
+    );
+    return response.data;
+  }
+};
