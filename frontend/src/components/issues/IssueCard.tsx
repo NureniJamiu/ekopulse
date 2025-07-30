@@ -56,7 +56,11 @@ const IssueCard: React.FC<IssueCardProps> = ({
             <div className="flex items-center gap-1">
               <User className="h-3 w-3" />
               <span>
-                Reported by {issue.reportedBy.firstName} {issue.reportedBy.lastName}
+                Reported by {
+                  issue.reportedBy.firstName && issue.reportedBy.lastName
+                    ? `${issue.reportedBy.firstName} ${issue.reportedBy.lastName}`
+                    : issue.reportedBy.email
+                }
               </span>
             </div>
 
@@ -69,7 +73,11 @@ const IssueCard: React.FC<IssueCardProps> = ({
               <div className="flex items-center gap-1">
                 <Settings className="h-3 w-3" />
                 <span>
-                  Assigned to {issue.assignedTo.firstName} {issue.assignedTo.lastName}
+                  Assigned to {
+                    issue.assignedTo.firstName && issue.assignedTo.lastName
+                      ? `${issue.assignedTo.firstName} ${issue.assignedTo.lastName}`
+                      : issue.assignedTo.email
+                  }
                 </span>
               </div>
             )}

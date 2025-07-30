@@ -88,7 +88,11 @@ const IssueDetailPanel: React.FC<IssueDetailPanelProps> = ({ issue, onUpdate }) 
               <div className="flex items-center gap-2 text-gray-600">
                 <User className="h-4 w-4" />
                 <span>
-                  Reported by {issue.reportedBy.firstName} {issue.reportedBy.lastName}
+                  Reported by {
+                    issue.reportedBy.firstName && issue.reportedBy.lastName
+                      ? `${issue.reportedBy.firstName} ${issue.reportedBy.lastName}`
+                      : issue.reportedBy.email
+                  }
                 </span>
               </div>
 
@@ -101,7 +105,11 @@ const IssueDetailPanel: React.FC<IssueDetailPanelProps> = ({ issue, onUpdate }) 
                 <div className="flex items-center gap-2 text-gray-600">
                   <Settings2 className="h-4 w-4" />
                   <span>
-                    Assigned to {issue.assignedTo.firstName} {issue.assignedTo.lastName}
+                    Assigned to {
+                      issue.assignedTo.firstName && issue.assignedTo.lastName
+                        ? `${issue.assignedTo.firstName} ${issue.assignedTo.lastName}`
+                        : issue.assignedTo.email
+                    }
                   </span>
                 </div>
               )}
