@@ -854,22 +854,22 @@ export const setupAgencyCredentials = async (req: Request, res: Response): Promi
 
 export const loginAgency = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { agencyId, password } = req.body;
+    const { identifier, password } = req.body; // Changed from agencyId to identifier
 
-    if (!agencyId || !password) {
-      res.status(400).json({
-        success: false,
-        error: 'Agency ID and password are required'
-      });
-      return;
+    if (!identifier || !password) {
+        res.status(400).json({
+            success: false,
+            error: "Agency ID/Email and password are required",
+        });
+        return;
     }
 
-    // Find agency by agencyId and include password field
+    // Find agency by either agencyId or email and include password field
     const agency = await Agency.findOne({
-      agencyId: agencyId,
-      status: 'active',
-      isActive: true
-    }).select('+password'); // Include password field
+        $or: [{ agencyId: identifier }, { email: identifier.toLowerCase() }],
+        status: "active",
+        isActive: true,
+    }).select("+password"); // Include password field
 
     if (!agency) {
       res.status(401).json({
