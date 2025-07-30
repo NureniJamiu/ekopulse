@@ -49,8 +49,8 @@ export class AgencyAssignmentService {
         {
           assignedAgency: selectedAgency._id,
           assignedAt: new Date(),
-          autoAssigned: true,
-          status: 'under_review'
+          autoAssigned: true
+          // Keep status as 'reported' - only change when agency actively starts working
         },
         { new: true }
       ).populate('assignedAgency reportedBy');
@@ -212,8 +212,8 @@ export class AgencyAssignmentService {
         {
           assignedAgency: agencyId,
           assignedAt: new Date(),
-          autoAssigned: false,
-          status: 'under_review'
+          autoAssigned: false
+          // Keep status as 'reported' - only change when agency actively starts working
         },
         { new: true }
       ).populate('assignedAgency reportedBy');
