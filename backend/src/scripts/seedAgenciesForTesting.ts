@@ -130,7 +130,7 @@ async function seedAgencies() {
       console.log(`  - Email: ${agencyData.email} | Password: ${getTestPassword(agencyData.agencyId)}`);
       console.log('');
     });
-    
+
     process.exit(0);
   } catch (error) {
     console.error('❌ Error seeding agencies:', error);
