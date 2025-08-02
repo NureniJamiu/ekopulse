@@ -33,114 +33,169 @@ export const uploadMiddleware = upload.single('image');
 
 export const createIssue = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    console.log('[CreateIssue] Request body:', req.body);
-    console.log('[CreateIssue] Request file:', req.file ? 'Present' : 'Not present');
+      console.log("[CreateIssue] Request body:", req.body);
+      console.log(
+          "[CreateIssue] Request file:",
+          req.file ? "Present" : "Not present"
+      );
 
-    const { userId } = req.auth!;
-    const { title, description, type, coordinates, address } = req.body;
+      const { userId } = req.auth!;
+      const { title, description, type, coordinates, address } = req.body;
 
-    // Find the user in our database
-    const user = await User.findOne({ clerkId: userId });
-    if (!user) {
-      console.log('[CreateIssue] User not found for clerkId:', userId);
-      res.status(404).json({
-        success: false,
-        error: 'User not found'
-      });
-      return;
-    }
+      // Find the user in our database
+      const user = await User.findOne({ clerkId: userId });
+      if (!user) {
+          console.log("[CreateIssue] User not found for clerkId:", userId);
+          res.status(404).json({
+              success: false,
+              error: "User not found",
+          });
+          return;
+      }
 
-    let imageUrl: string | undefined;
-    let imagePublicId: string | undefined;
+      let imageUrl: string | undefined;
+      let imagePublicId: string | undefined;
 
-    // Handle image upload if present
-    if (req.file) {
-      console.log('[CreateIssue] Processing image upload:', {
-        filename: req.file.originalname,
-        size: req.file.size,
-        mimetype: req.file.mimetype
-      });
+      // Handle image upload if present
+      if (req.file) {
+          console.log("[CreateIssue] Processing image upload:", {
+              filename: req.file.originalname,
+              size: req.file.size,
+              mimetype: req.file.mimetype,
+          });
 
+          try {
+              const result = await uploadToCloudinary(req.file.buffer);
+              imageUrl = result.secure_url;
+              imagePublicId = result.public_id;
+              console.log("[CreateIssue] Image upload successful:", imageUrl);
+          } catch (uploadError) {
+              console.error("[CreateIssue] Image upload failed:", uploadError);
+              res.status(400).json({
+                  success: false,
+                  error: `Image upload failed: ${
+                      uploadError instanceof Error
+                          ? uploadError.message
+                          : "Unknown error"
+                  }`,
+              });
+              return;
+          }
+      } else {
+          console.log("[CreateIssue] No image file provided");
+      }
+
+      // Parse coordinates
+      let coords;
       try {
-        const result = await uploadToCloudinary(req.file.buffer);
-        imageUrl = result.secure_url;
-        imagePublicId = result.public_id;
-        console.log('[CreateIssue] Image upload successful:', imageUrl);
-      } catch (uploadError) {
-        console.error('[CreateIssue] Image upload failed:', uploadError);
-        res.status(400).json({
-          success: false,
-          error: `Image upload failed: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`
-        });
-        return;
-      }
-    } else {
-      console.log('[CreateIssue] No image file provided');
-    }
+          coords = JSON.parse(coordinates);
+          console.log("[CreateIssue] Parsed coordinates:", coords);
 
-    // Parse coordinates
-    let coords;
-    try {
-      coords = JSON.parse(coordinates);
-      console.log('[CreateIssue] Parsed coordinates:', coords);
-
-      if (!coords || typeof coords.lat !== 'number' || typeof coords.lng !== 'number') {
-        throw new Error('Invalid coordinates format');
+          if (
+              !coords ||
+              typeof coords.lat !== "number" ||
+              typeof coords.lng !== "number"
+          ) {
+              throw new Error("Invalid coordinates format");
+          }
+      } catch (parseError) {
+          console.error(
+              "[CreateIssue] Failed to parse coordinates:",
+              parseError
+          );
+          res.status(400).json({
+              success: false,
+              error: "Invalid coordinates format",
+          });
+          return;
       }
-    } catch (parseError) {
-      console.error('[CreateIssue] Failed to parse coordinates:', parseError);
-      res.status(400).json({
-        success: false,
-        error: 'Invalid coordinates format'
+
+      console.log("[CreateIssue] Creating issue with data:", {
+          title,
+          description,
+          type,
+          coordinates: coords,
+          address,
+          hasImage: !!imageUrl,
       });
-      return;
-    }
 
-    console.log('[CreateIssue] Creating issue with data:', {
-      title,
-      description,
-      type,
-      coordinates: coords,
-      address,
-      hasImage: !!imageUrl
-    });
+      const issue = await IssueReport.create({
+          title,
+          description,
+          type,
+          location: {
+              type: "Point",
+              coordinates: [coords.lng, coords.lat],
+          },
+          address,
+          imageUrl,
+          imagePublicId,
+          reportedBy: user._id,
+          priority: "medium", // Default priority
+      });
 
-    const issue = await IssueReport.create({
-      title,
-      description,
-      type,
-      location: {
-        type: 'Point',
-        coordinates: [coords.lng, coords.lat]
-      },
-      address,
-      imageUrl,
-      imagePublicId,
-      reportedBy: user._id,
-      priority: 'medium' // Default priority
-    });
+      await issue.populate("reportedBy", "firstName lastName email role");
 
-    await issue.populate('reportedBy', 'firstName lastName email role');
+      console.log("[CreateIssue] Issue created successfully:", issue._id);
 
-    console.log('[CreateIssue] Issue created successfully:', issue._id);
+      // Send immediate notification to citizen about successful report
+      const notificationService = new NotificationService(req.io);
+      await notificationService.notifyIssueReported(issue);
 
-    // Auto-assign to appropriate agency
-    const assignmentService = new AgencyAssignmentService(req.io);
-    const assignmentResult = await assignmentService.autoAssignIssue(issue);
+      // Auto-assign to appropriate agency
+      const assignmentService = new AgencyAssignmentService(req.io);
+      const assignmentResult = await assignmentService.autoAssignIssue(issue);
 
-    if (assignmentResult.success) {
-      console.log('[CreateIssue] Issue auto-assigned to agency:', assignmentResult.agency?.name);
-    } else {
-      console.log('[CreateIssue] Auto-assignment failed:', assignmentResult.reason);
-    }
+      if (assignmentResult.success && assignmentResult.agency) {
+          console.log(
+              "[CreateIssue] Issue auto-assigned to agency:",
+              assignmentResult.agency.name
+          );
 
-    // Emit real-time update to all users
-    req.io.emit('new_issue', issue);
+          // Notify the agency about the new assignment
+          await notificationService.notifyIssueAssignment(
+              issue,
+              assignmentResult.agency
+          );
 
-    res.status(201).json({
-      success: true,
-      data: issue
-    });
+          // Notify the citizen that their issue has been assigned
+          await notificationService.notifyIssueAssignedToCitizen(
+              issue,
+              assignmentResult.agency
+          );
+
+          // If it's a high priority issue, notify other relevant agencies too
+          if (issue.priority === "high" || issue.priority === "urgent") {
+              // Find other agencies that handle this type of issue
+              const relevantAgencies = await(
+                  await import("../models/Agency")
+              ).default.find({
+                  isActive: true,
+                  issueTypes: { $in: [issue.type] },
+                  _id: { $ne: assignmentResult.agency._id },
+              });
+
+              if (relevantAgencies.length > 0) {
+                  await notificationService.notifyAgenciesAboutCriticalIssue(
+                      issue,
+                      relevantAgencies
+                  );
+              }
+          }
+      } else {
+          console.log(
+              "[CreateIssue] Auto-assignment failed:",
+              assignmentResult.reason
+          );
+      }
+
+      // Emit real-time update to all users
+      req.io.emit("new_issue", issue);
+
+      res.status(201).json({
+          success: true,
+          data: issue,
+      });
   } catch (error) {
     console.error('[CreateIssue] Server error:', error);
     res.status(500).json({

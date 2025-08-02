@@ -26,35 +26,47 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchOrCreateUser = async () => {
-    if (!clerkUser) return;
+      if (!clerkUser) return;
 
-    try {
-      setIsLoading(true);
-
-      // Try to get existing user first
-      try {
-        const existingUser = await authAPI.getCurrentUser();
-        setUser(existingUser);
-      } catch (error: any) {
-        // If user doesn't exist (404), create them
-        if (error.response?.status === 404) {
-          const newUser = await authAPI.getOrCreateUser({
-            email: clerkUser.primaryEmailAddress?.emailAddress || '',
-            firstName: clerkUser.firstName || undefined,
-            lastName: clerkUser.lastName || undefined,
-            role: 'citizen' // Default role
-          });
-          setUser(newUser);
-        } else {
-          throw error;
-        }
+      // Check if user is logged in via agency authentication
+      // If so, skip Clerk user creation to avoid authentication conflicts
+      const agencyToken = localStorage.getItem("agencyToken");
+      if (agencyToken) {
+          console.log(
+              "[AuthContext] Agency authentication detected, skipping Clerk user fetch"
+          );
+          setUser(null);
+          setIsLoading(false);
+          return;
       }
-    } catch (error) {
-      console.error('Error fetching/creating user:', error);
-      toast.error('Failed to load user data');
-    } finally {
-      setIsLoading(false);
-    }
+
+      try {
+          setIsLoading(true);
+
+          // Try to get existing user first
+          try {
+              const existingUser = await authAPI.getCurrentUser();
+              setUser(existingUser);
+          } catch (error: any) {
+              // If user doesn't exist (404), create them
+              if (error.response?.status === 404) {
+                  const newUser = await authAPI.getOrCreateUser({
+                      email: clerkUser.primaryEmailAddress?.emailAddress || "",
+                      firstName: clerkUser.firstName || undefined,
+                      lastName: clerkUser.lastName || undefined,
+                      role: "citizen", // Default role
+                  });
+                  setUser(newUser);
+              } else {
+                  throw error;
+              }
+          }
+      } catch (error) {
+          console.error("Error fetching/creating user:", error);
+          toast.error("Failed to load user data");
+      } finally {
+          setIsLoading(false);
+      }
   };
 
   const updateUserRole = async (role: 'citizen' | 'authority' | 'agency_admin') => {

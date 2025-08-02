@@ -26,103 +26,151 @@ const api: AxiosInstance = axios.create({
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
-  async (config) => {
-    try {
-      console.log('[API] Making request to:', config.url);
+    async (config) => {
+        try {
+            console.log("[API] Making request to:", config.url);
 
-      // Handle FormData requests - remove Content-Type to let browser set it with boundary
-      if (config.data instanceof FormData) {
-        delete config.headers['Content-Type'];
-      }
-
-      // Check if this is a public route that doesn't need authentication
-      const publicRoutes = ['/issues', '/health', '/test', '/agencies/register'];
-      const isPublicRoute = publicRoutes.some(route =>
-        config.url === route || config.url?.endsWith(route)
-      );
-
-      // For public routes, don't require authentication but still add token if available
-      if (isPublicRoute) {
-        console.log('[API] Public route detected, proceeding without waiting for auth');
-        if (window.Clerk?.session) {
-          try {
-            const token = await window.Clerk.session.getToken();
-            if (token) {
-              config.headers.Authorization = `Bearer ${token}`;
+            // Handle FormData requests - remove Content-Type to let browser set it with boundary
+            if (config.data instanceof FormData) {
+                delete config.headers["Content-Type"];
             }
-          } catch (tokenError) {
-            console.warn('[API] Could not get token for public route:', tokenError);
-          }
+
+            // Check if this is a public route that doesn't need authentication
+            const publicRoutes = [
+                "/issues",
+                "/health",
+                "/test",
+                "/agencies/register",
+            ];
+            const isPublicRoute = publicRoutes.some(
+                (route) => config.url === route || config.url?.endsWith(route)
+            );
+
+            // For public routes, don't require authentication but still add token if available
+            if (isPublicRoute) {
+                console.log(
+                    "[API] Public route detected, proceeding without waiting for auth"
+                );
+                if (window.Clerk?.session) {
+                    try {
+                        const token = await window.Clerk.session.getToken();
+                        if (token) {
+                            config.headers.Authorization = `Bearer ${token}`;
+                        }
+                    } catch (tokenError) {
+                        console.warn(
+                            "[API] Could not get token for public route:",
+                            tokenError
+                        );
+                    }
+                }
+                return config;
+            }
+
+            // For protected routes, wait for Clerk to be loaded with timeout
+            if (window.Clerk && !window.Clerk.loaded) {
+                console.log("[API] Waiting for Clerk to load...");
+                try {
+                    await Promise.race([
+                        window.Clerk.load(),
+                        new Promise((_, reject) =>
+                            setTimeout(
+                                () => reject(new Error("Clerk load timeout")),
+                                5000
+                            )
+                        ),
+                    ]);
+                } catch (loadError) {
+                    console.error(
+                        "[API] Clerk failed to load within timeout:",
+                        loadError
+                    );
+                    // Continue without authentication
+                }
+            }
+
+            // Check if Clerk is loaded and user is signed in
+            if (window.Clerk?.session) {
+                console.log("[API] Clerk session found, getting token...");
+                try {
+                    // Get session token for API calls
+                    const token = await window.Clerk.session.getToken();
+                    if (token) {
+                        console.log("[API] Token retrieved successfully");
+                        config.headers.Authorization = `Bearer ${token}`;
+                    } else {
+                        console.warn(
+                            "[API] No token returned from Clerk session"
+                        );
+                    }
+                } catch (tokenError) {
+                    console.error("[API] Error getting token:", tokenError);
+                }
+            } else {
+                // Check for agency authentication if Clerk is not available
+                const agencyToken = localStorage.getItem("agencyToken");
+                if (agencyToken) {
+                    console.log(
+                        "[API] Agency token found, using agency authentication"
+                    );
+                    config.headers.Authorization = `Bearer ${agencyToken}`;
+                } else {
+                    console.warn(
+                        "[API] No Clerk session or agency token found - user may not be authenticated"
+                    );
+                }
+            }
+        } catch (error) {
+            console.error("Failed to get Clerk token:", error);
+            // Don't reject the request, just proceed without token
         }
         return config;
-      }
-
-      // For protected routes, wait for Clerk to be loaded with timeout
-      if (window.Clerk && !window.Clerk.loaded) {
-        console.log('[API] Waiting for Clerk to load...');
-        try {
-          await Promise.race([
-            window.Clerk.load(),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Clerk load timeout')), 5000))
-          ]);
-        } catch (loadError) {
-          console.error('[API] Clerk failed to load within timeout:', loadError);
-          // Continue without authentication
-        }
-      }
-
-      // Check if Clerk is loaded and user is signed in
-      if (window.Clerk?.session) {
-        console.log('[API] Clerk session found, getting token...');
-        try {
-          // Get session token for API calls
-          const token = await window.Clerk.session.getToken();
-          if (token) {
-            console.log('[API] Token retrieved successfully');
-            config.headers.Authorization = `Bearer ${token}`;
-          } else {
-            console.warn('[API] No token returned from Clerk session');
-          }
-        } catch (tokenError) {
-          console.error('[API] Error getting token:', tokenError);
-        }
-      } else {
-        console.warn('[API] No Clerk session found - user may not be authenticated');
-      }
-    } catch (error) {
-      console.error('Failed to get Clerk token:', error);
-      // Don't reject the request, just proceed without token
+    },
+    (error) => {
+        return Promise.reject(error);
     }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
 );
 
 // Response interceptor for error handling
 api.interceptors.response.use(
-  (response: AxiosResponse) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      console.error('Authentication error:', error.response.data);
+    (response: AxiosResponse) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            console.error("Authentication error:", error.response.data);
 
-      // Don't automatically redirect if we're already on an auth page
-      const currentPath = window.location.pathname;
-      if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
-        // Show a toast error instead of immediately redirecting
-        import('react-hot-toast').then(({ default: toast }) => {
-          toast.error('Authentication failed. Please sign in again.');
-        });
+            // Check if this is an agency user by checking for agency token
+            const agencyToken = localStorage.getItem("agencyToken");
 
-        // Add a small delay before redirecting to allow user to see the error
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 2000);
-      }
+            if (agencyToken) {
+                // Clear agency session data
+                localStorage.removeItem("agencyToken");
+                localStorage.removeItem("agencyId");
+                localStorage.removeItem("agencyMongerId");
+            }
+
+            // Don't automatically redirect if we're already on an auth page
+            const currentPath = window.location.pathname;
+            if (
+                !currentPath.includes("/login") &&
+                !currentPath.includes("/register")
+            ) {
+                // Show a toast error instead of immediately redirecting
+                import("react-hot-toast").then(({ default: toast }) => {
+                    toast.error("Authentication failed. Please sign in again.");
+                });
+
+                // Add a small delay before redirecting to allow user to see the error
+                setTimeout(() => {
+                    if (agencyToken) {
+                        window.location.href = "/login?tab=agency";
+                    } else {
+                        window.location.href = "/login";
+                    }
+                }, 2000);
+            }
+        }
+        return Promise.reject(error);
     }
-    return Promise.reject(error);
-  }
 );
 
 // Types
@@ -422,6 +470,22 @@ export const notificationAPI = {
     const response = await api.put('/notifications/mark-all-read',
       recipientType ? { recipientType } : {}
     );
+    return response.data;
+  },
+
+  // Administrative endpoints
+  triggerOverdueNotifications: async () => {
+    const response = await api.post('/notifications/admin/trigger-overdue');
+    return response.data;
+  },
+
+  triggerUnassignedNotifications: async () => {
+    const response = await api.post('/notifications/admin/trigger-unassigned');
+    return response.data;
+  },
+
+  triggerWeeklySummary: async (agencyId: string) => {
+    const response = await api.post(`/notifications/admin/trigger-summary/${agencyId}`);
     return response.data;
   }
 };

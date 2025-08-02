@@ -80,16 +80,20 @@ const AgencyLoginModal: React.FC<AgencyLoginModalProps> = ({
           if (response.ok) {
               const data = await response.json();
               console.log("[Agency Login] Success:", data);
-              toast.success("Successfully logged in!");
-              onSuccess();
 
               // Store agency session/token
               localStorage.setItem("agencyToken", data.token);
               localStorage.setItem("agencyId", data.agency.agencyId); // Use the human-readable agencyId, not the MongoDB _id
               localStorage.setItem("agencyMongerId", data.agency.id); // Store MongoDB _id separately if needed
 
-              // Redirect to agency dashboard
-              window.location.href = "/agency-dashboard";
+              toast.success("Successfully logged in!");
+              onSuccess();
+
+              // Add a small delay to ensure localStorage is updated before redirect
+              setTimeout(() => {
+                  // Redirect to agency dashboard
+                  window.location.href = "/agency-dashboard";
+              }, 500);
           } else {
               const errorData = await response.json();
               console.error("[Agency Login] Error response:", errorData);

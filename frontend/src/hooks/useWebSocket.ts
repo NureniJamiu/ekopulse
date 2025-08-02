@@ -13,135 +13,203 @@ interface UseWebSocketReturn {
   subscribeToLocation: (bounds: { north: number; south: number; east: number; west: number }) => void;
 }
 
+interface NotificationData {
+    _id: string;
+    title: string;
+    message: string;
+    type: string;
+    status: string;
+    createdAt: string;
+    data?: any;
+}
+
 export const useWebSocket = (
-  onNewIssue?: (issue: IssueType) => void,
-  onIssueUpdate?: (issue: IssueType) => void,
-  onMapUpdate?: (data: { type: string; data: IssueType }) => void
+    onNewIssue?: (issue: IssueType) => void,
+    onIssueUpdate?: (issue: IssueType) => void,
+    onMapUpdate?: (data: { type: string; data: IssueType }) => void,
+    onNotification?: (notification: NotificationData) => void
 ): UseWebSocketReturn => {
-  const [socket, setSocket] = useState<Socket | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const { user } = useAuth();
+    const [socket, setSocket] = useState<Socket | null>(null);
+    const [isConnected, setIsConnected] = useState(false);
+    const { user } = useAuth();
 
-  // Use refs to store the latest callback functions
-  const onNewIssueRef = useRef(onNewIssue);
-  const onIssueUpdateRef = useRef(onIssueUpdate);
-  const onMapUpdateRef = useRef(onMapUpdate);
+    // Use refs to store the latest callback functions
+    const onNewIssueRef = useRef(onNewIssue);
+    const onIssueUpdateRef = useRef(onIssueUpdate);
+    const onMapUpdateRef = useRef(onMapUpdate);
+    const onNotificationRef = useRef(onNotification);
 
-  // Update refs when callbacks change
-  useEffect(() => {
-    onNewIssueRef.current = onNewIssue;
-  }, [onNewIssue]);
+    // Update refs when callbacks change
+    useEffect(() => {
+        onNewIssueRef.current = onNewIssue;
+    }, [onNewIssue]);
 
-  useEffect(() => {
-    onIssueUpdateRef.current = onIssueUpdate;
-  }, [onIssueUpdate]);
+    useEffect(() => {
+        onIssueUpdateRef.current = onIssueUpdate;
+    }, [onIssueUpdate]);
 
-  useEffect(() => {
-    onMapUpdateRef.current = onMapUpdate;
-  }, [onMapUpdate]);
+    useEffect(() => {
+        onMapUpdateRef.current = onMapUpdate;
+    }, [onMapUpdate]);
 
-  useEffect(() => {
-    // Initialize socket connection
-    const newSocket = io(WS_URL, {
-      transports: ['websocket', 'polling'],
-    });
+    useEffect(() => {
+        onNotificationRef.current = onNotification;
+    }, [onNotification]);
 
-    newSocket.on('connect', () => {
-      console.log('🔗 Connected to WebSocket server');
-      setIsConnected(true);
-
-      // Join appropriate room based on user role
-      if (user) {
-        newSocket.emit('join_room', {
-          role: user.role,
-          userId: user._id
+    useEffect(() => {
+        // Initialize socket connection
+        const newSocket = io(WS_URL, {
+            transports: ["websocket", "polling"],
         });
-      }
-    });
 
-    newSocket.on('disconnect', () => {
-      console.log('🔌 Disconnected from WebSocket server');
-      setIsConnected(false);
-    });
+        newSocket.on("connect", () => {
+            console.log("🔗 Connected to WebSocket server");
+            setIsConnected(true);
 
-    newSocket.on('connect_error', (error) => {
-      console.error('❌ WebSocket connection error:', error);
-      setIsConnected(false);
-    });
+            // Join appropriate room based on user role
+            if (user) {
+                newSocket.emit("join_room", {
+                    role: user.role,
+                    userId: user._id,
+                });
+            }
+        });
 
-    // Listen for new issues
-    newSocket.on('new_issue', (issue: IssueType) => {
-      console.log('📍 New issue received:', issue);
-      if (onNewIssueRef.current) {
-        onNewIssueRef.current(issue);
-      }
+        newSocket.on("disconnect", () => {
+            console.log("🔌 Disconnected from WebSocket server");
+            setIsConnected(false);
+        });
 
-      // Show notification for authorities
-      if (user?.role === 'authority') {
-        toast.success(`New ${issue.type} issue reported in ${issue.address}`);
-      }
-    });
+        newSocket.on("connect_error", (error) => {
+            console.error("❌ WebSocket connection error:", error);
+            setIsConnected(false);
+        });
 
-    // Listen for issue updates
-    newSocket.on('issue_updated', (issue: IssueType) => {
-      console.log('📍 Issue updated:', issue);
-      if (onIssueUpdateRef.current) {
-        onIssueUpdateRef.current(issue);
-      }
-    });
+        // Listen for new issues
+        newSocket.on("new_issue", (issue: IssueType) => {
+            console.log("📍 New issue received:", issue);
+            if (onNewIssueRef.current) {
+                onNewIssueRef.current(issue);
+            }
 
-    // Listen for specific issue status updates
-    newSocket.on('issue_status_updated', (issue: IssueType) => {
-      console.log('📍 Issue status updated:', issue);
-      if (onIssueUpdateRef.current) {
-        onIssueUpdateRef.current(issue);
-      }
+            // Show notification for authorities
+            if (user?.role === "authority") {
+                toast.success(
+                    `New ${issue.type} issue reported in ${issue.address}`
+                );
+            }
+        });
 
-      // Show notification to issue reporter
-      if (user && issue.reportedBy._id === user._id) {
-        toast.success(`Your issue status updated to: ${issue.status.replace('_', ' ')}`);
-      }
-    });
+        // Listen for issue updates
+        newSocket.on("issue_updated", (issue: IssueType) => {
+            console.log("📍 Issue updated:", issue);
+            if (onIssueUpdateRef.current) {
+                onIssueUpdateRef.current(issue);
+            }
+        });
 
-    // Listen for map updates
-    newSocket.on('map_update', (data: { type: string; data: IssueType }) => {
-      console.log('🗺️ Map update received:', data);
-      if (onMapUpdateRef.current) {
-        onMapUpdateRef.current(data);
-      }
-    });
+        // Listen for specific issue status updates
+        newSocket.on("issue_status_updated", (issue: IssueType) => {
+            console.log("📍 Issue status updated:", issue);
+            if (onIssueUpdateRef.current) {
+                onIssueUpdateRef.current(issue);
+            }
 
-    setSocket(newSocket);
+            // Show notification to issue reporter
+            if (user && issue.reportedBy._id === user._id) {
+                toast.success(
+                    `Your issue status updated to: ${issue.status.replace(
+                        "_",
+                        " "
+                    )}`
+                );
+            }
+        });
 
-    // Cleanup on unmount
-    return () => {
-      newSocket.close();
+        // Listen for map updates
+        newSocket.on(
+            "map_update",
+            (data: { type: string; data: IssueType }) => {
+                console.log("🗺️ Map update received:", data);
+                if (onMapUpdateRef.current) {
+                    onMapUpdateRef.current(data);
+                }
+            }
+        );
+
+        // Listen for real-time notifications
+        newSocket.on("notification", (notification: NotificationData) => {
+            console.log("🔔 Notification received:", notification);
+
+            // Show toast notification
+            const notificationTypeIcons = {
+                issue_assigned: "📋",
+                status_updated: "✅",
+                new_report: "📢",
+                agency_mention: "🏢",
+                issue_reminder: "⏰",
+                agency_summary: "📊",
+            };
+
+            const icon =
+                notificationTypeIcons[
+                    notification.type as keyof typeof notificationTypeIcons
+                ] || "🔔";
+            toast.success(`${icon} ${notification.title}`, {
+                duration: 5000,
+            });
+
+            // Call custom handler if provided
+            if (onNotificationRef.current) {
+                onNotificationRef.current(notification);
+            }
+        });
+
+        setSocket(newSocket);
+
+        // Cleanup on unmount
+        return () => {
+            newSocket.close();
+        };
+    }, [user]); // Only depend on user, not the callback functions
+
+    const subscribeToIssue = useCallback(
+        (issueId: string) => {
+            if (socket) {
+                socket.emit("subscribe_to_issue", issueId);
+            }
+        },
+        [socket]
+    );
+
+    const unsubscribeFromIssue = useCallback(
+        (issueId: string) => {
+            if (socket) {
+                socket.emit("unsubscribe_from_issue", issueId);
+            }
+        },
+        [socket]
+    );
+
+    const subscribeToLocation = useCallback(
+        (bounds: {
+            north: number;
+            south: number;
+            east: number;
+            west: number;
+        }) => {
+            if (socket) {
+                socket.emit("subscribe_to_location", bounds);
+            }
+        },
+        [socket]
+    );
+
+    return {
+        socket,
+        isConnected,
+        subscribeToIssue,
+        unsubscribeFromIssue,
+        subscribeToLocation,
     };
-  }, [user]); // Only depend on user, not the callback functions
-
-  const subscribeToIssue = useCallback((issueId: string) => {
-    if (socket) {
-      socket.emit('subscribe_to_issue', issueId);
-    }
-  }, [socket]);
-
-  const unsubscribeFromIssue = useCallback((issueId: string) => {
-    if (socket) {
-      socket.emit('unsubscribe_from_issue', issueId);
-    }
-  }, [socket]);
-
-  const subscribeToLocation = useCallback((bounds: { north: number; south: number; east: number; west: number }) => {
-    if (socket) {
-      socket.emit('subscribe_to_location', bounds);
-    }
-  }, [socket]);
-
-  return {
-    socket,
-    isConnected,
-    subscribeToIssue,
-    unsubscribeFromIssue,
-    subscribeToLocation,
-  };
 };

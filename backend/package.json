@@ -9,7 +9,8 @@
         "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
         "type-check": "tsc --noEmit",
         "seed:agencies": "ts-node src/scripts/seedAgencies.ts",
-        "seed:issues": "ts-node src/scripts/seedIssueReports.ts"
+        "seed:issues": "ts-node src/scripts/seedIssueReports.ts",
+        "seed:notifications": "ts-node src/scripts/seedNotifications.ts"
     },
     "keywords": [
         "environmental",
