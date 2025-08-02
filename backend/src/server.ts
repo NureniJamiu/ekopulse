@@ -82,7 +82,7 @@ app.use("/api/notifications", notificationRoutes);
 app.get("/api/health", (req: Request, res: Response) => {
     res.status(200).json({
         status: "OK",
-        message: "EcoPulse API is running",
+        message: "EkoPulse API is running",
         timestamp: new Date().toISOString(),
     });
 });
@@ -97,6 +97,6 @@ scheduledNotificationService.startScheduledTasks();
 const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => {
-  logger.info(`🚀 EcoPulse server running on port ${PORT}`);
-  logger.info(`📍 Environment: ${process.env.NODE_ENV}`);
+    logger.info(`🚀 EkoPulse server running on port ${PORT}`);
+    logger.info(`📍 Environment: ${process.env.NODE_ENV}`);
 });

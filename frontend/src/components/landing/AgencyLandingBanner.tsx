@@ -40,7 +40,7 @@ const AgencyLandingBanner: React.FC = () => {
                                     Are you an Environmental Agency?
                                 </h2>
                                 <p className="text-blue-100">
-                                    Join EcoPulse to manage environmental issues
+                                    Join EkoPulse to manage environmental issues
                                     in your area
                                 </p>
                             </div>

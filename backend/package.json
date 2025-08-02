@@ -1,7 +1,7 @@
 {
     "name": "ekopulse-backend",
     "version": "1.0.0",
-    "description": "EcoPulse Backend API - Environmental Issue Reporting for Lagos",
+    "description": "EkoPulse Backend API - Environmental Issue Reporting for Lagos",
     "main": "dist/server.js",
     "scripts": {
         "build": "tsc",

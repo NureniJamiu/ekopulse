@@ -1019,7 +1019,7 @@ async function sendAgencySetupEmail(agency: IAgency): Promise<void> {
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Complete Your Agency Setup - EcoPulse</title>
+        <title>Complete Your Agency Setup - EkoPulse</title>
         <style>
           body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
@@ -1034,14 +1034,16 @@ async function sendAgencySetupEmail(agency: IAgency): Promise<void> {
       <body>
         <div class="container">
           <div class="header">
-            <h1>🌍 Welcome to EcoPulse</h1>
+            <h1>🌍 Welcome to EkoPulse</h1>
             <p>Complete Your Agency Setup</p>
           </div>
 
           <div class="content">
-            <h2>Hello ${agency.contactPerson?.name || 'Agency Administrator'},</h2>
+            <h2>Hello ${
+                agency.contactPerson?.name || "Agency Administrator"
+            },</h2>
 
-            <p>Thank you for registering your agency with EcoPulse! We're excited to have you join our environmental monitoring platform.</p>
+            <p>Thank you for registering your agency with EkoPulse! We're excited to have you join our environmental monitoring platform.</p>
 
             <div class="agency-info">
               <h3>📋 Agency Details</h3>
@@ -1069,11 +1071,13 @@ async function sendAgencySetupEmail(agency: IAgency): Promise<void> {
 
             <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
 
-            <p>Best regards,<br>The EcoPulse Team</p>
+            <p>Best regards,<br>The EkoPulse Team</p>
           </div>
 
           <div class="footer">
-            <p>This email was sent to ${agency.email} because you registered an agency account with EcoPulse.</p>
+            <p>This email was sent to ${
+                agency.email
+            } because you registered an agency account with EkoPulse.</p>
             <p>If you didn't register for this account, please ignore this email.</p>
           </div>
         </div>
@@ -1082,10 +1086,10 @@ async function sendAgencySetupEmail(agency: IAgency): Promise<void> {
     `;
 
     await transporter.sendMail({
-      from: `"EcoPulse" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
-      to: agency.email,
-      subject: `Complete Your Agency Setup - ${agency.name}`,
-      html: emailHtml
+        from: `"EkoPulse" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+        to: agency.email,
+        subject: `Complete Your Agency Setup - ${agency.name}`,
+        html: emailHtml,
     });
 
     console.log(`[Email] Setup email sent successfully to ${agency.email}`);

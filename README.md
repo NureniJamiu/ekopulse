@@ -1,6 +1,6 @@
-# EcoPulse - Environmental Issue Reporting Platform
+# EkoPulse - Environmental Issue Reporting Platform
 
-EcoPulse is a comprehensive web application designed to help citizens of Lagos, Nigeria report environmental issues and enable authorities to track and respond to them efficiently. The platform features real-time updates, interactive mapping, and role-based access control.
+EkoPulse is a comprehensive web application designed to help citizens of Lagos, Nigeria report environmental issues and enable authorities to track and respond to them efficiently. The platform features real-time updates, interactive mapping, and role-based access control.
 
 ## 🌟 Features
 
@@ -252,4 +252,4 @@ Potential future features:
 
 ---
 
-**EcoPulse** - Making Lagos cleaner, one report at a time. 🌍
+**EkoPulse** - Making Lagos cleaner, one report at a time. 🌍
