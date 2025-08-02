@@ -2,41 +2,43 @@ import express, { Router } from 'express';
 import clerkAuth from '../middleware/clerkAuth';
 import agencyAuth from '../middleware/agencyAuth';
 import {
-  createAgency,
-  getAllAgencies,
-  getAgencyById,
-  updateAgency,
-  deleteAgency,
-  getAgencyIssues,
-  getAgencyStats,
-  assignIssueToAgency,
-  registerAgency,
-  validateSetupToken,
-  setupAgencyCredentials,
-  loginAgency,
-  verifyAgencySession,
-  getMyAgencyIssues,
-  getMyAgencyStats,
-  debugAgencyIssues
-} from '../controllers/agencyController';
+    createAgency,
+    getAllAgencies,
+    getAgencyById,
+    updateAgency,
+    deleteAgency,
+    getAgencyIssues,
+    getAgencyStats,
+    assignIssueToAgency,
+    registerAgency,
+    validateSetupToken,
+    setupAgencyCredentials,
+    loginAgency,
+    verifyAgencySession,
+    getMyAgencyIssues,
+    getMyAgencyStats,
+    debugAgencyIssues,
+    updateIssueStatusByAgency,
+} from "../controllers/agencyController";
 
 const router: Router = express.Router();
 
 // Public route for agency registration (no auth required)
-router.post('/register', registerAgency);
+router.post("/register", registerAgency);
 
 // Debug route (no auth required for testing)
-router.get('/debug-issues', debugAgencyIssues);
+router.get("/debug-issues", debugAgencyIssues);
 
 // Public routes for agency setup and login
-router.get('/validate-setup-token', validateSetupToken);
-router.post('/setup-credentials', setupAgencyCredentials);
-router.post('/login', loginAgency);
-router.post('/verify-session', verifyAgencySession);
+router.get("/validate-setup-token", validateSetupToken);
+router.post("/setup-credentials", setupAgencyCredentials);
+router.post("/login", loginAgency);
+router.post("/verify-session", verifyAgencySession);
 
 // Agency dashboard routes (require agency session authentication)
-router.get('/my-issues', agencyAuth, getMyAgencyIssues);
-router.get('/my-stats', agencyAuth, getMyAgencyStats);
+router.get("/my-issues", agencyAuth, getMyAgencyIssues);
+router.get("/my-stats", agencyAuth, getMyAgencyStats);
+router.put("/issues/:id/status", agencyAuth, updateIssueStatusByAgency);
 
 // All other routes require Clerk authentication
 router.use(clerkAuth);

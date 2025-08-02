@@ -84,17 +84,25 @@ export const MAP_CONFIG = {
 
 // API endpoints
 export const API_ENDPOINTS = {
-  auth: {
-    user: '/auth/user',
-    updateRole: '/auth/user/role'
-  },
-  issues: {
-    list: '/issues',
-    create: '/issues',
-    byId: (id: string) => `/issues/${id}`,
-    updateStatus: (id: string) => `/issues/${id}/status`,
-    userReports: '/issues/user/my-reports'
-  }
+    auth: {
+        user: "/auth/user",
+        updateRole: "/auth/user/role",
+    },
+    issues: {
+        list: "/issues",
+        create: "/issues",
+        byId: (id: string) => `/issues/${id}`,
+        updateStatus: (id: string) => `/issues/${id}/status`,
+        userReports: "/issues/user/my-reports",
+    },
+    agencies: {
+        register: "/agencies/register",
+        login: "/agencies/login",
+        verifySession: "/agencies/verify-session",
+        myIssues: "/agencies/my-issues",
+        myStats: "/agencies/my-stats",
+        updateIssueStatus: (id: string) => `/agencies/issues/${id}/status`,
+    },
 } as const;
 
 // Form validation

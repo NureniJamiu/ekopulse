@@ -175,33 +175,34 @@ api.interceptors.response.use(
 
 // Types
 export interface IssueType {
-  _id: string;
-  title: string;
-  description: string;
-  type: 'waste' | 'drainage' | 'pollution' | 'other';
-  status: 'reported' | 'under_review' | 'resolved';
-  location: {
-    type: 'Point';
-    coordinates: [number, number];
-  };
-  address: string;
-  imageUrl?: string;
-  reportedBy: {
     _id: string;
-    firstName?: string;
-    lastName?: string;
-    email: string;
-    role: string;
-  };
-  assignedTo?: {
-    _id: string;
-    firstName?: string;
-    lastName?: string;
-    email: string;
-    role: string;
-  };
-  createdAt: string;
-  updatedAt: string;
+    title: string;
+    description: string;
+    type: "waste" | "drainage" | "pollution" | "other";
+    status: "reported" | "under_review" | "resolved";
+    priority: "low" | "medium" | "high" | "urgent";
+    location: {
+        type: "Point";
+        coordinates: [number, number];
+    };
+    address: string;
+    imageUrl?: string;
+    reportedBy: {
+        _id: string;
+        firstName?: string;
+        lastName?: string;
+        email: string;
+        role: string;
+    };
+    assignedTo?: {
+        _id: string;
+        firstName?: string;
+        lastName?: string;
+        email: string;
+        role: string;
+    };
+    createdAt: string;
+    updatedAt: string;
 }
 
 export interface User {
@@ -443,6 +444,14 @@ export const agencyAPI = {
 
   getMyAgencyStats: async () => {
     const response = await apiWithAgencyAuth.get('/agencies/my-stats');
+    return response.data.data;
+  },
+
+  updateIssueStatus: async (id: string, status: string): Promise<IssueType> => {
+    const response = await apiWithAgencyAuth.put<ApiResponse<IssueType>>(
+      API_ENDPOINTS.agencies.updateIssueStatus(id),
+      { status }
+    );
     return response.data.data;
   }
 };

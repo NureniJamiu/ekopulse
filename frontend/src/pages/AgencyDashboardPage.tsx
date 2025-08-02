@@ -13,32 +13,9 @@ import {
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import IssueCard from "../components/issues/IssueCard";
 import EmptyState from "../components/common/EmptyState";
-import { agencyAPI } from "../utils/api";
+import StatusUpdateModal from "../components/issues/StatusUpdateModal";
+import { agencyAPI, IssueType } from "../utils/api";
 import toast from "react-hot-toast";
-
-interface Issue {
-    _id: string;
-    title: string;
-    description: string;
-    type: "waste" | "drainage" | "pollution" | "other";
-    status: "reported" | "under_review" | "resolved";
-    priority: "low" | "medium" | "high" | "urgent";
-    location: {
-        type: "Point";
-        coordinates: [number, number];
-    };
-    address: string;
-    imageUrl?: string;
-    reportedBy: {
-        _id: string;
-        firstName?: string;
-        lastName?: string;
-        email: string;
-        role: string;
-    };
-    createdAt: string;
-    updatedAt: string;
-}
 
 interface AgencyStats {
     statusBreakdown: Array<{ _id: string; count: number }>;
@@ -59,7 +36,7 @@ const AgencyDashboardPage: React.FC = () => {
         error: authError,
         logout,
     } = useAgencyAuth();
-    const [issues, setIssues] = useState<Issue[]>([]);
+    const [issues, setIssues] = useState<IssueType[]>([]);
     const [stats, setStats] = useState<AgencyStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState({
@@ -67,6 +44,8 @@ const AgencyDashboardPage: React.FC = () => {
         type: "all",
         priority: "all",
     });
+    const [selectedIssue, setSelectedIssue] = useState<IssueType | null>(null);
+    const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
 
     useEffect(() => {
         if (isAuthenticated && agency && !authLoading) {
@@ -115,6 +94,41 @@ const AgencyDashboardPage: React.FC = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleStatusUpdate = async (issueId: string, newStatus: string) => {
+        try {
+            const updatedIssue = await agencyAPI.updateIssueStatus(
+                issueId,
+                newStatus
+            );
+
+            // Update the issue in the local state
+            setIssues((prevIssues) =>
+                prevIssues.map((issue) =>
+                    issue._id === issueId ? updatedIssue : issue
+                )
+            );
+
+            // Close the modal
+            setIsStatusModalOpen(false);
+            setSelectedIssue(null);
+
+            toast.success(
+                `Issue status updated to ${newStatus.replace("_", " ")}`
+            );
+
+            // Optionally refresh the agency stats
+            fetchAgencyData();
+        } catch (error) {
+            console.error("Error updating issue status:", error);
+            toast.error("Failed to update issue status");
+        }
+    };
+
+    const handleIssueStatusUpdate = (issue: IssueType) => {
+        setSelectedIssue(issue);
+        setIsStatusModalOpen(true);
     };
 
     // Show loading spinner while checking authentication
@@ -490,27 +504,38 @@ const AgencyDashboardPage: React.FC = () => {
                                     />
                                 </div>
                             ) : (
-                                <div className="divide-y divide-gray-200">
-                                    {filteredIssues.map((issue) => (
-                                        <div
-                                            key={issue._id}
-                                            className="p-6 hover:bg-gray-50"
-                                        >
+                                <div className="p-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {filteredIssues.map((issue) => (
                                             <IssueCard
+                                                key={issue._id}
                                                 issue={issue}
                                                 showActions={true}
-                                                onStatusUpdate={() =>
-                                                    fetchAgencyData()
+                                                onStatusUpdate={
+                                                    handleIssueStatusUpdate
                                                 }
                                             />
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                         </div>
                     </div>
                 )}
             </div>
+
+            {/* Status Update Modal */}
+            {selectedIssue && (
+                <StatusUpdateModal
+                    isOpen={isStatusModalOpen}
+                    onClose={() => {
+                        setIsStatusModalOpen(false);
+                        setSelectedIssue(null);
+                    }}
+                    issue={selectedIssue}
+                    onUpdate={handleStatusUpdate}
+                />
+            )}
         </div>
     );
 };

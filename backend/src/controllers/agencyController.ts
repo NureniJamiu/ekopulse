@@ -1165,3 +1165,101 @@ export const debugAgencyIssues = async (req: Request, res: Response): Promise<vo
     });
   }
 };
+
+// Agency-specific issue status update (using agency authentication)
+export const updateIssueStatusByAgency = async (req: AgencyAuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const agency = req.agency!;
+    const { id } = req.params;
+    const { status, agencyNotes } = req.body;
+
+    // Validate status
+    if (!['reported', 'under_review', 'resolved'].includes(status)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid status'
+      });
+      return;
+    }
+
+    // Find the issue and verify it's assigned to this agency
+    const issue = await IssueReport.findById(id);
+    if (!issue) {
+      res.status(404).json({
+        success: false,
+        error: 'Issue not found'
+      });
+      return;
+    }
+
+    // Check if the issue is assigned to this agency
+    if (!issue.assignedAgency || issue.assignedAgency.toString() !== agency._id.toString()) {
+      res.status(403).json({
+        success: false,
+        error: 'This issue is not assigned to your agency'
+      });
+      return;
+    }
+
+    const updateData: any = {
+      status,
+      assignedAgency: agency._id
+    };
+
+    if (agencyNotes) {
+      updateData.agencyNotes = agencyNotes;
+    }
+
+    const updatedIssue = await IssueReport.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true }
+    ).populate('reportedBy', 'firstName lastName email role')
+     .populate('assignedAgency', 'name type email');
+
+    if (!updatedIssue) {
+      res.status(404).json({
+        success: false,
+        error: 'Issue not found'
+      });
+      return;
+    }
+
+    // Send notification to citizen about status update (if needed)
+    try {
+      const NotificationService = require('../services/NotificationService').NotificationService;
+      const notificationService = new NotificationService(req.io);
+
+      // Create a mock user object for the agency to satisfy the notification service
+      const mockAgencyUser = {
+        _id: agency._id,
+        firstName: agency.name,
+        lastName: 'Agency',
+        email: agency.email,
+        role: 'agency_admin'
+      };
+
+      await notificationService.notifyIssueStatusUpdate(updatedIssue, mockAgencyUser);
+    } catch (notificationError) {
+      console.warn('Failed to send status update notification:', notificationError);
+      // Don't fail the status update if notification fails
+    }
+
+    // Emit real-time update
+    if (req.io) {
+      req.io.emit('issue_updated', updatedIssue);
+      req.io.to(`issue_${updatedIssue._id}`).emit('issue_status_updated', updatedIssue);
+    }
+
+    res.status(200).json({
+      success: true,
+      data: updatedIssue
+    });
+  } catch (error) {
+    console.error('Error updating issue status:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Server Error'
+    });
+  }
+};
