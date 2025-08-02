@@ -3,7 +3,8 @@ import { io, Socket } from 'socket.io-client';
 import { WS_URL } from '../utils/constants';
 import { IssueType } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
-import toast from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
+import logger from '../utils/logger';
 
 interface UseWebSocketReturn {
   socket: Socket | null;
@@ -33,13 +34,11 @@ export const useWebSocket = (
     const [isConnected, setIsConnected] = useState(false);
     const { user } = useAuth();
 
-    // Use refs to store the latest callback functions
     const onNewIssueRef = useRef(onNewIssue);
     const onIssueUpdateRef = useRef(onIssueUpdate);
     const onMapUpdateRef = useRef(onMapUpdate);
     const onNotificationRef = useRef(onNotification);
 
-    // Update refs when callbacks change
     useEffect(() => {
         onNewIssueRef.current = onNewIssue;
     }, [onNewIssue]);
@@ -63,7 +62,7 @@ export const useWebSocket = (
         });
 
         newSocket.on("connect", () => {
-            console.log("🔗 Connected to WebSocket server");
+            logger.info("Connected to WebSocket server");
             setIsConnected(true);
 
             // Join appropriate room based on user role
@@ -76,7 +75,7 @@ export const useWebSocket = (
         });
 
         newSocket.on("disconnect", () => {
-            console.log("🔌 Disconnected from WebSocket server");
+            logger.info("Disconnected from WebSocket server");
             setIsConnected(false);
         });
 
@@ -87,7 +86,7 @@ export const useWebSocket = (
 
         // Listen for new issues
         newSocket.on("new_issue", (issue: IssueType) => {
-            console.log("📍 New issue received:", issue);
+            logger.info("New issue received", { issueId: issue._id });
             if (onNewIssueRef.current) {
                 onNewIssueRef.current(issue);
             }
@@ -102,7 +101,7 @@ export const useWebSocket = (
 
         // Listen for issue updates
         newSocket.on("issue_updated", (issue: IssueType) => {
-            console.log("📍 Issue updated:", issue);
+            logger.info("Issue updated", { issueId: issue._id });
             if (onIssueUpdateRef.current) {
                 onIssueUpdateRef.current(issue);
             }
@@ -110,7 +109,7 @@ export const useWebSocket = (
 
         // Listen for specific issue status updates
         newSocket.on("issue_status_updated", (issue: IssueType) => {
-            console.log("📍 Issue status updated:", issue);
+            logger.info("Issue status updated", { issueId: issue._id, status: issue.status });
             if (onIssueUpdateRef.current) {
                 onIssueUpdateRef.current(issue);
             }
@@ -130,7 +129,7 @@ export const useWebSocket = (
         newSocket.on(
             "map_update",
             (data: { type: string; data: IssueType }) => {
-                console.log("🗺️ Map update received:", data);
+                logger.info("Map update received", { type: data.type });
                 if (onMapUpdateRef.current) {
                     onMapUpdateRef.current(data);
                 }
@@ -139,7 +138,7 @@ export const useWebSocket = (
 
         // Listen for real-time notifications
         newSocket.on("notification", (notification: NotificationData) => {
-            console.log("🔔 Notification received:", notification);
+            logger.info("Notification received", { type: notification.type });
 
             // Show toast notification
             const notificationTypeIcons = {

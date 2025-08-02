@@ -1,33 +1,32 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
+import logger from '../utils/logger';
 
 export const initializeSocketServer = (io: SocketIOServer): void => {
   io.on('connection', (socket: Socket) => {
-    console.log(`🔗 User connected: ${socket.id}`);
+    logger.debug(`🔗 User connected: ${socket.id}`);
 
-    // Join user to a room based on their role (if provided)
     socket.on('join_room', (data: { role: string }) => {
       if (data.role === 'authority') {
         socket.join('authorities');
-        console.log(`👮 Authority joined: ${socket.id}`);
+        logger.debug(`👮 Authority joined: ${socket.id}`);
       } else {
         socket.join('citizens');
-        console.log(`👤 Citizen joined: ${socket.id}`);
+        logger.debug(`👤 Citizen joined: ${socket.id}`);
       }
     });
 
-    // Handle issue status updates for real-time notifications
     socket.on('subscribe_to_issue', (issueId: string) => {
       socket.join(`issue_${issueId}`);
-      console.log(`📍 User ${socket.id} subscribed to issue ${issueId}`);
+      logger.debug(`📍 User ${socket.id} subscribed to issue ${issueId}`);
     });
 
     socket.on('unsubscribe_from_issue', (issueId: string) => {
       socket.leave(`issue_${issueId}`);
-      console.log(`📍 User ${socket.id} unsubscribed from issue ${issueId}`);
+      logger.debug(`📍 User ${socket.id} unsubscribed from issue ${issueId}`);
     });
 
     socket.on('disconnect', () => {
-      console.log(`🔌 User disconnected: ${socket.id}`);
+      logger.debug(`🔌 User disconnected: ${socket.id}`);
     });
   });
 

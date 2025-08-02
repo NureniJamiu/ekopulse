@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { useUser } from '@clerk/clerk-react';
 import { authAPI, User } from '../utils/api';
 import toast from 'react-hot-toast';
+import logger from '../utils/logger';
 
 interface AuthContextType {
   user: User | null;
@@ -32,9 +33,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // If so, skip Clerk user creation to avoid authentication conflicts
       const agencyToken = localStorage.getItem("agencyToken");
       if (agencyToken) {
-          console.log(
-              "[AuthContext] Agency authentication detected, skipping Clerk user fetch"
-          );
+          logger.info("Agency authentication detected, skipping Clerk user fetch");
           setUser(null);
           setIsLoading(false);
           return;
@@ -71,9 +70,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const updateUserRole = async (role: 'citizen' | 'authority' | 'agency_admin') => {
     try {
-      console.log('[AuthContext] Updating role to:', role);
+      logger.info("Updating user role", { role });
       const updatedUser = await authAPI.updateUserRole(role);
-      console.log('[AuthContext] Role update successful, new user:', updatedUser);
+      logger.info("Role update successful", { newRole: updatedUser.role });
       setUser(updatedUser);
       toast.success(`Role updated to ${role}`);
     } catch (error) {

@@ -16,16 +16,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     const { agency, isAuthenticated: isAgencyAuthenticated } = useAgencyAuth();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    // Check if we're on login, register, or agency setup pages to hide navbar
     const isAuthPage =
         window.location.pathname === "/login" ||
         window.location.pathname === "/register" ||
         window.location.pathname === "/agency-setup";
 
-    // Determine if user is authenticated through either Clerk or Agency system
     const isAuthenticated = isSignedIn || isAgencyAuthenticated;
 
-    // Use useMemo to ensure navigation updates when role changes
     const navigation = useMemo(() => {
         const baseNavigation = [
             {
@@ -36,9 +33,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             },
         ];
 
-        // Add role-specific navigation
         if (isSignedIn) {
-            // For Clerk authenticated users
             baseNavigation.push({
                 name: "My Reports",
                 href: "/my-reports",
@@ -56,7 +51,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 });
             }
         } else if (isAgencyAuthenticated) {
-            // For agency authenticated users
             baseNavigation.push({
                 name: "Dashboard",
                 href: "/agency-dashboard",

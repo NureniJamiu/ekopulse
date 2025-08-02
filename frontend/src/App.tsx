@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ClerkProvider, ClerkLoading, ClerkLoaded } from '@clerk/clerk-react';
 import { Toaster } from 'react-hot-toast';

@@ -4,8 +4,8 @@ import { issuesAPI, IssueType } from '../utils/api';
 import IssueCard from '../components/issues/IssueCard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import EmptyState from '../components/common/EmptyState';
-import { formatRelativeTime, getStatusConfig } from '../utils/helpers';
-import { MapPin, Calendar, Filter } from 'lucide-react';
+import { getStatusConfig } from '../utils/helpers';
+import { MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const MyReportsPage: React.FC = () => {

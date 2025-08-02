@@ -24,10 +24,8 @@ const HomePage: React.FC = () => {
     closeReportModal
   } = useMap();
 
-  // Initialize user location and map positioning
   useUserLocation();
 
-  // Memoized WebSocket callbacks to prevent infinite re-renders
   const handleNewIssue = useCallback((newIssue: IssueType) => {
     addIssue(newIssue);
   }, [addIssue]);
@@ -44,10 +42,8 @@ const HomePage: React.FC = () => {
     }
   }, [addIssue, updateIssue]);
 
-  // Initialize WebSocket connection
   useWebSocket(handleNewIssue, handleIssueUpdate, handleMapUpdate);
 
-  // Load initial issues - can be loaded without authentication for public viewing
   useEffect(() => {
     const loadIssues = async () => {
       try {
@@ -68,8 +64,6 @@ const HomePage: React.FC = () => {
     toast.success('Issue reported successfully!');
   };
 
-  // Show loading spinner only while authentication is loading (briefly)
-  // Issues will load independently and won't block the UI
   if (isAuthLoading) {
     return (
       <div className="flex h-screen items-center justify-center">

@@ -1,6 +1,4 @@
 import dotenv from 'dotenv';
-
-// Load environment variables first
 dotenv.config();
 
 import express, { Application, Request, Response } from 'express';
@@ -18,11 +16,11 @@ import agencyRoutes from './routes/agencyRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import { initializeSocketServer } from './websockets/socketServer';
 import ScheduledNotificationService from "./services/ScheduledNotificationService";
+import logger from './utils/logger';
 
 const app: Application = express();
 const server = createServer(app);
 
-// Initialize Socket.IO
 const io = new SocketIOServer(server, {
     cors: {
         origin: process.env.FRONTEND_URL || "http://localhost:5173",
@@ -30,10 +28,8 @@ const io = new SocketIOServer(server, {
     },
 });
 
-// Connect to MongoDB
 connectDB();
 
-// Security middleware
 app.use(
     helmet({
         crossOriginResourcePolicy: { policy: "cross-origin" },
@@ -52,22 +48,19 @@ app.use(
             "Origin",
         ],
         exposedHeaders: ["Content-Range", "X-Content-Range"],
-        maxAge: 86400, // 24 hours
+        maxAge: 86400,
     })
 );
 
-// Rate limiting
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 100,
 });
 app.use("/api/", limiter);
 
-// Body parsing middleware
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// Make io accessible in routes
 declare global {
     namespace Express {
         interface Request {
@@ -81,13 +74,11 @@ app.use((req: Request, res: Response, next) => {
     next();
 });
 
-// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/issues", issueRoutes);
 app.use("/api/agencies", agencyRoutes);
 app.use("/api/notifications", notificationRoutes);
 
-// Health check endpoint
 app.get("/api/health", (req: Request, res: Response) => {
     res.status(200).json({
         status: "OK",
@@ -96,30 +87,16 @@ app.get("/api/health", (req: Request, res: Response) => {
     });
 });
 
-// Test endpoint to verify requests are reaching the server
-app.get("/api/test", (req: Request, res: Response) => {
-    res.status(200).json({
-        message: "Test endpoint working",
-        headers: {
-            authorization: req.headers.authorization ? "Present" : "Missing",
-            cookie: req.headers.cookie ? "Present" : "Missing",
-        },
-    });
-});
-
-// Error handling middleware
 app.use(errorHandler);
 
-// Initialize WebSocket handlers
 initializeSocketServer(io);
 
-// Initialize scheduled notification service
 const scheduledNotificationService = new ScheduledNotificationService(io);
 scheduledNotificationService.startScheduledTasks();
 
 const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => {
-  console.log(`🚀 EcoPulse server running on port ${PORT}`);
-  console.log(`📍 Environment: ${process.env.NODE_ENV}`);
+  logger.info(`🚀 EcoPulse server running on port ${PORT}`);
+  logger.info(`📍 Environment: ${process.env.NODE_ENV}`);
 });

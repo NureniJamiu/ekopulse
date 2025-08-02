@@ -8,7 +8,6 @@ import { MAP_CONFIG } from '../../utils/constants';
 import { getIssueTypeConfig } from '../../utils/helpers';
 import UserLocationMarker from './UserLocationMarker';
 
-// Fix for default markers in react-leaflet
 delete (Icon.Default.prototype as any)._getIconUrl;
 Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -16,11 +15,9 @@ Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Create custom icons for different issue types
 const createCustomIcon = (type: string) => {
   const config = getIssueTypeConfig(type);
 
-  // Create SVG without emoji to avoid btoa encoding issues
   const svgString = `
     <svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
       <path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 12.5 12.5 28.5 12.5 28.5s12.5-16 12.5-28.5C25 5.6 19.4 0 12.5 0z" fill="${config.color}"/>
@@ -29,6 +26,7 @@ const createCustomIcon = (type: string) => {
     </svg>
   `;
 
+  // Use proper base64 encoding for UTF-8 strings
   // Use proper base64 encoding for UTF-8 strings
   const base64String = btoa(unescape(encodeURIComponent(svgString)));
 
@@ -40,7 +38,6 @@ const createCustomIcon = (type: string) => {
   });
 };
 
-// Map event handler component
 const MapEventHandler: React.FC = () => {
   const { handleMapClick } = useMapInteractions();
 

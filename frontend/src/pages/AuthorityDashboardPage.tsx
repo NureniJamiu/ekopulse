@@ -6,7 +6,6 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 import EmptyState from '../components/common/EmptyState';
 import NotificationAdminPanel from "../components/common/NotificationAdminPanel";
 import StatusUpdateModal from "../components/issues/StatusUpdateModal";
-import { getStatusConfig, formatRelativeTime } from "../utils/helpers";
 import {
     Shield,
     TrendingUp,

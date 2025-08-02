@@ -1,9 +1,10 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Shield, User, GripVertical, Building2 } from 'lucide-react';
+import logger from '../../utils/logger';
 
 const RoleSwitcher: React.FC = () => {
-  const { user, isAuthority, isCitizen, isAgencyAdmin, updateUserRole, refreshUser } = useAuth();
+  const { user, isAuthority, isCitizen, updateUserRole, refreshUser } = useAuth();
 
   // Load position from localStorage or use default (with fallback for SSR)
   const getInitialPosition = () => {
@@ -29,19 +30,19 @@ const RoleSwitcher: React.FC = () => {
   const dragRef = useRef<HTMLDivElement>(null);
 
   const handleRoleSwitch = async (role: 'citizen' | 'authority' | 'agency_admin') => {
-    if (user.role === role) return;
+    if (!user || user.role === role) return;
 
     try {
-      console.log('[RoleSwitcher] Switching role to:', role);
+      logger.info("Switching user role", { fromRole: user.role, toRole: role });
       await updateUserRole(role);
-      console.log('[RoleSwitcher] Role switch successful');
+      logger.info("Role switch successful", { newRole: role });
       // Don't reload the page - let React handle the state updates
       // The AuthContext will automatically update and trigger re-renders
     } catch (error) {
       console.error('[RoleSwitcher] Failed to switch role:', error);
       // If there's an auth error, try refreshing the user context
       if (error instanceof Error && error.message.includes('auth')) {
-        console.log('[RoleSwitcher] Auth error detected, attempting to refresh user context');
+        logger.warn("Auth error detected, attempting to refresh user context");
         try {
           await refreshUser();
         } catch (refreshError) {
