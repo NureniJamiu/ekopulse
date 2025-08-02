@@ -15,71 +15,102 @@ import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import AgencySetupPage from './pages/AgencySetupPage';
 import PostSignupFlow from './components/onboarding/PostSignupFlow';
+import LoadingSpinner from "./components/common/LoadingSpinner";
 
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 if (!clerkPubKey) {
-  throw new Error('Missing Clerk Publishable Key');
+    throw new Error("Missing Clerk Publishable Key");
 }
 
 function App() {
-  return (
-    <ClerkProvider publishableKey={clerkPubKey}>
-      <ClerkLoading>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-lg">Loading...</div>
-        </div>
-      </ClerkLoading>
-      <ClerkLoaded>
-        <Router>
-          <AuthProvider>
-            <MapProvider>
-              <ErrorBoundary>
-                <div className="App">
-                  <Layout>
-                    <Routes>
-                      <Route path="/" element={<HomePage />} />
-                      <Route path="/register" element={<RegisterPage />} />
-                      <Route path="/login" element={<LoginPage />} />
-                      <Route path="/agency-setup" element={<AgencySetupPage />} />
-                      <Route path="/my-reports" element={<MyReportsPage />} />
-                      <Route path="/authority-dashboard" element={<AuthorityDashboardPage />} />
-                      <Route path="/agency-dashboard" element={<AgencyDashboardPage />} />
-                      <Route path="/agency-management" element={<AgencyManagementPage />} />
-                    </Routes>
-                  </Layout>
-
-                  {/* Post-signup onboarding flow */}
-                  <PostSignupFlow />
-
-                  <Toaster
-                    position="top-right"
-                    toastOptions={{
-                  duration: 4000,
-                  style: {
-                    background: '#363636',
-                    color: '#fff',
-                  },
-                  success: {
-                    style: {
-                      background: '#059669',
-                    },
-                  },
-                  error: {
-                    style: {
-                      background: '#dc2626',
-                    },
-                  },
-                }}
-              />
+    return (
+        <ClerkProvider publishableKey={clerkPubKey}>
+            <ClerkLoading>
+                <div className="flex items-center justify-center min-h-screen">
+                    <LoadingSpinner />
                 </div>
-              </ErrorBoundary>
-            </MapProvider>
-          </AuthProvider>
-        </Router>
-      </ClerkLoaded>
-    </ClerkProvider>
-  );
+            </ClerkLoading>
+            <ClerkLoaded>
+                <Router>
+                    <AuthProvider>
+                        <MapProvider>
+                            <ErrorBoundary>
+                                <div className="App">
+                                    <Layout>
+                                        <Routes>
+                                            <Route
+                                                path="/"
+                                                element={<HomePage />}
+                                            />
+                                            <Route
+                                                path="/register"
+                                                element={<RegisterPage />}
+                                            />
+                                            <Route
+                                                path="/login"
+                                                element={<LoginPage />}
+                                            />
+                                            <Route
+                                                path="/agency-setup"
+                                                element={<AgencySetupPage />}
+                                            />
+                                            <Route
+                                                path="/my-reports"
+                                                element={<MyReportsPage />}
+                                            />
+                                            <Route
+                                                path="/authority-dashboard"
+                                                element={
+                                                    <AuthorityDashboardPage />
+                                                }
+                                            />
+                                            <Route
+                                                path="/agency-dashboard"
+                                                element={
+                                                    <AgencyDashboardPage />
+                                                }
+                                            />
+                                            <Route
+                                                path="/agency-management"
+                                                element={
+                                                    <AgencyManagementPage />
+                                                }
+                                            />
+                                        </Routes>
+                                    </Layout>
+
+                                    {/* Post-signup onboarding flow */}
+                                    <PostSignupFlow />
+
+                                    <Toaster
+                                        position="top-right"
+                                        toastOptions={{
+                                            duration: 4000,
+                                            style: {
+                                                background: "#363636",
+                                                color: "#fff",
+                                            },
+                                            success: {
+                                                style: {
+                                                    background: "#059669",
+                                                },
+                                            },
+                                            error: {
+                                                style: {
+                                                    background: "#dc2626",
+                                                },
+                                            },
+                                        }}
+                                    />
+                                </div>
+                            </ErrorBoundary>
+                        </MapProvider>
+                    </AuthProvider>
+                </Router>
+            </ClerkLoaded>
+        </ClerkProvider>
+    );
 }
 
 export default App;
