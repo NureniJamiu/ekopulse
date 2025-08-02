@@ -1,7 +1,7 @@
 import React from 'react';
 import { IssueType } from '../../utils/api';
 import { getIssueTypeConfig, getStatusConfig, formatRelativeTime } from '../../utils/helpers';
-import { X, MapPin, Calendar, User, Camera, Settings2 } from 'lucide-react';
+import { X, MapPin, Calendar, User, Settings2 } from 'lucide-react';
 import { useMap } from '../../contexts/MapContext';
 
 interface IssueDetailPanelProps {
@@ -9,7 +9,7 @@ interface IssueDetailPanelProps {
   onUpdate: (issue: IssueType) => void;
 }
 
-const IssueDetailPanel: React.FC<IssueDetailPanelProps> = ({ issue, onUpdate }) => {
+const IssueDetailPanel: React.FC<IssueDetailPanelProps> = ({ issue }) => {
   const { setSelectedIssue } = useMap();
   const typeConfig = getIssueTypeConfig(issue.type);
   const statusConfig = getStatusConfig(issue.status);

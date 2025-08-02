@@ -21,7 +21,6 @@ export const useMapInteractions = (): UseMapInteractionsReturn => {
     setZoom,
     setSelectedIssue,
     openReportModal,
-    issues,
     filteredIssues
   } = useMap();
   const { user, isLoading } = useAuth();

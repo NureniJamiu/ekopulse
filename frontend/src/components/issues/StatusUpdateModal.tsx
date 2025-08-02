@@ -1,7 +1,7 @@
 import React from 'react';
 import { IssueType } from '../../utils/api';
 import { ISSUE_STATUS } from '../../utils/constants';
-import { X, CheckCircle } from 'lucide-react';
+import { X } from 'lucide-react';
 
 interface StatusUpdateModalProps {
   isOpen: boolean;
@@ -56,7 +56,7 @@ const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                     name="status"
                     value={status}
                     checked={selectedStatus === status}
-                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    onChange={(e) => setSelectedStatus(e.target.value as 'reported' | 'under_review' | 'resolved')}
                     className="mr-3 text-emerald-600 focus:ring-emerald-500"
                   />
                   <span className="text-sm text-gray-700">{config.label}</span>
