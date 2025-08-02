@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Bell, X, Check, Clock, AlertCircle, FileText } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-import { notificationAPI } from '../../utils/api';
-import toast from 'react-hot-toast';
+import React, { useState, useEffect, useCallback } from "react";
+import { Bell, X, Check, Clock, AlertCircle, FileText } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
+import { notificationAPI } from "../../utils/api";
+import { useWebSocket } from "../../hooks/useWebSocket";
+import toast from "react-hot-toast";
 
 interface Notification {
     _id: string;
@@ -38,6 +39,42 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
     // Show the bell if user exists (Clerk auth) or if parent forces it (for agency auth)
     const shouldShow = user !== null || forceShow;
 
+    const fetchUnreadCount = async () => {
+        try {
+            const data = await notificationAPI.getUnreadCount(recipientType);
+            setUnreadCount(data.unreadCount);
+        } catch (error) {
+            console.error("Error fetching unread count:", error);
+        }
+    };
+
+    // Handle real-time notifications via WebSocket
+    const handleNotification = useCallback(
+        (notification: any) => {
+            console.log("Real-time notification received:", notification);
+
+            // Update unread count
+            setUnreadCount((prev) => prev + 1);
+
+            // If notifications panel is open, add the new notification to the list
+            if (isOpen) {
+                setNotifications((prev) => [notification, ...prev]);
+            }
+
+            // Force refetch to ensure we have the latest data
+            fetchUnreadCount();
+        },
+        [isOpen]
+    );
+
+    // Set up WebSocket connection for real-time notifications
+    useWebSocket(
+        undefined, // onNewIssue
+        undefined, // onIssueUpdate
+        undefined, // onMapUpdate
+        handleNotification // onNotification
+    );
+
     useEffect(() => {
         if (shouldShow) {
             fetchUnreadCount();
@@ -53,15 +90,6 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
             fetchNotifications();
         }
     }, [isOpen]);
-
-    const fetchUnreadCount = async () => {
-        try {
-            const data = await notificationAPI.getUnreadCount(recipientType);
-            setUnreadCount(data.unreadCount);
-        } catch (error) {
-            console.error("Error fetching unread count:", error);
-        }
-    };
 
     const fetchNotifications = async () => {
         try {
