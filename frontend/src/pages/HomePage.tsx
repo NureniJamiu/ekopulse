@@ -8,111 +8,124 @@ import MapComponent from '../components/map/MapComponent';
 import IssueReportModal from '../components/issues/IssueReportModal';
 import IssueDetailPanel from '../components/issues/IssueDetailPanel';
 import MapFilters from '../components/map/MapFilters';
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import LocationReportButton from '../components/common/LocationReportButton';
-import AgencyLandingBanner from '../components/landing/AgencyLandingBanner';
-import toast from 'react-hot-toast';
+import MapSearch from "../components/map/MapSearch";
+import LoadingSpinner from "../components/common/LoadingSpinner";
+import LocationReportButton from "../components/common/LocationReportButton";
+import AgencyLandingBanner from "../components/landing/AgencyLandingBanner";
+import toast from "react-hot-toast";
 
 const HomePage: React.FC = () => {
-  const { isLoading: isAuthLoading } = useAuth();
-  const {
-    setIssues,
-    addIssue,
-    updateIssue,
-    selectedIssue,
-    isReportModalOpen,
-    closeReportModal
-  } = useMap();
+    const { isLoading: isAuthLoading } = useAuth();
+    const {
+        setIssues,
+        addIssue,
+        updateIssue,
+        selectedIssue,
+        isReportModalOpen,
+        closeReportModal,
+    } = useMap();
 
-  useUserLocation();
+    useUserLocation();
 
-  const handleNewIssue = useCallback((newIssue: IssueType) => {
-    addIssue(newIssue);
-  }, [addIssue]);
+    const handleNewIssue = useCallback(
+        (newIssue: IssueType) => {
+            addIssue(newIssue);
+        },
+        [addIssue]
+    );
 
-  const handleIssueUpdate = useCallback((updatedIssue: IssueType) => {
-    updateIssue(updatedIssue);
-  }, [updateIssue]);
+    const handleIssueUpdate = useCallback(
+        (updatedIssue: IssueType) => {
+            updateIssue(updatedIssue);
+        },
+        [updateIssue]
+    );
 
-  const handleMapUpdate = useCallback((mapUpdate: { type: string; data: IssueType }) => {
-    if (mapUpdate.type === 'new_issue') {
-      addIssue(mapUpdate.data);
-    } else if (mapUpdate.type === 'issue_updated') {
-      updateIssue(mapUpdate.data);
-    }
-  }, [addIssue, updateIssue]);
+    const handleMapUpdate = useCallback(
+        (mapUpdate: { type: string; data: IssueType }) => {
+            if (mapUpdate.type === "new_issue") {
+                addIssue(mapUpdate.data);
+            } else if (mapUpdate.type === "issue_updated") {
+                updateIssue(mapUpdate.data);
+            }
+        },
+        [addIssue, updateIssue]
+    );
 
-  useWebSocket(handleNewIssue, handleIssueUpdate, handleMapUpdate);
+    useWebSocket(handleNewIssue, handleIssueUpdate, handleMapUpdate);
 
-  useEffect(() => {
-    const loadIssues = async () => {
-      try {
-        const response = await issuesAPI.getIssues({ limit: 100 });
-        setIssues(response.data);
-      } catch (error) {
-        console.error('Error loading issues:', error);
-        toast.error('Failed to load issues');
-      }
+    useEffect(() => {
+        const loadIssues = async () => {
+            try {
+                const response = await issuesAPI.getIssues({ limit: 100 });
+                setIssues(response.data);
+            } catch (error) {
+                console.error("Error loading issues:", error);
+                toast.error("Failed to load issues");
+            }
+        };
+
+        loadIssues();
+    }, [setIssues]);
+
+    const handleIssueCreated = (newIssue: any) => {
+        addIssue(newIssue);
+        closeReportModal();
+        toast.success("Issue reported successfully!");
     };
 
-    loadIssues();
-  }, [setIssues]);
+    if (isAuthLoading) {
+        return (
+            <div className="flex h-screen items-center justify-center">
+                <LoadingSpinner />
+            </div>
+        );
+    }
 
-  const handleIssueCreated = (newIssue: any) => {
-    addIssue(newIssue);
-    closeReportModal();
-    toast.success('Issue reported successfully!');
-  };
-
-  if (isAuthLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <LoadingSpinner />
-      </div>
+        <div className="flex flex-col bg-gray-50 relative">
+            {/* Agency Landing Banner for unauthenticated users - positioned absolutely */}
+            <AgencyLandingBanner />
+
+            <div className="flex" style={{ height: "calc(100vh - 64px)" }}>
+                {/* Main Map Area */}
+                <div className="flex-1 relative">
+                    {/* Map Search - positioned at top-left */}
+                    <MapSearch />
+
+                    {/* Map Filters - now self-positioning */}
+                    <MapFilters />
+
+                    {/* Location-based Report Button */}
+                    <div className="absolute bottom-8 right-6 md:bottom-8 md:right-8 z-20">
+                        <LocationReportButton />
+                    </div>
+
+                    {/* Map Component */}
+                    <MapComponent />
+
+                    {/* Issue Report Modal */}
+                    {isReportModalOpen && (
+                        <IssueReportModal
+                            isOpen={isReportModalOpen}
+                            onClose={closeReportModal}
+                            onIssueCreated={handleIssueCreated}
+                        />
+                    )}
+                </div>
+
+                {/* Issue Detail Panel */}
+                {selectedIssue && (
+                    <div className="w-96 bg-white shadow-lg border-l border-gray-200">
+                        <IssueDetailPanel
+                            issue={selectedIssue}
+                            onUpdate={updateIssue}
+                        />
+                    </div>
+                )}
+            </div>
+        </div>
     );
-  }
-
-  return (
-      <div className="flex flex-col bg-gray-50 relative">
-          {/* Agency Landing Banner for unauthenticated users - positioned absolutely */}
-          <AgencyLandingBanner />
-
-          <div className="flex" style={{ height: "calc(100vh - 64px)" }}>
-              {/* Main Map Area */}
-              <div className="flex-1 relative">
-                  {/* Map Filters - now self-positioning */}
-                  <MapFilters />
-
-                  {/* Location-based Report Button */}
-                  <div className="absolute bottom-8 right-6 md:bottom-8 md:right-8 z-20">
-                      <LocationReportButton />
-                  </div>
-
-                  {/* Map Component */}
-                  <MapComponent />
-
-                  {/* Issue Report Modal */}
-                  {isReportModalOpen && (
-                      <IssueReportModal
-                          isOpen={isReportModalOpen}
-                          onClose={closeReportModal}
-                          onIssueCreated={handleIssueCreated}
-                      />
-                  )}
-              </div>
-
-              {/* Issue Detail Panel */}
-              {selectedIssue && (
-                  <div className="w-96 bg-white shadow-lg border-l border-gray-200">
-                      <IssueDetailPanel
-                          issue={selectedIssue}
-                          onUpdate={updateIssue}
-                      />
-                  </div>
-              )}
-          </div>
-      </div>
-  );
 };
 
 export default HomePage;

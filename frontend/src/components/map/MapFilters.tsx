@@ -16,7 +16,7 @@ const MapFilters: React.FC = () => {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isMinimized, setIsMinimized] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
-    const [position, setPosition] = useState({ x: 16, y: 16 }); // Initial position (top-left)
+    const [position, setPosition] = useState({ x: 16, y: 120 }); // Position below the search component
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
     const filterRef = useRef<HTMLDivElement>(null);
 
