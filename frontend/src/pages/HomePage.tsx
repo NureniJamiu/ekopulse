@@ -9,6 +9,7 @@ import IssueReportModal from '../components/issues/IssueReportModal';
 import IssueDetailPanel from '../components/issues/IssueDetailPanel';
 import MapFilters from '../components/map/MapFilters';
 import MapSearch from "../components/map/MapSearch";
+import DesktopSearch from "../components/map/DesktopSearch";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import LocationReportButton from "../components/common/LocationReportButton";
 import AgencyLandingBanner from "../components/landing/AgencyLandingBanner";
@@ -96,8 +97,10 @@ const HomePage: React.FC = () => {
                     {/* Map Filters - now self-positioning */}
                     <MapFilters />
 
-                    {/* Location-based Report Button */}
+                    {/* Location-based Report Button with Desktop Search */}
                     <div className="absolute bottom-8 right-6 md:bottom-8 md:right-8 z-20">
+                        {/* Desktop Search positioned above the report button */}
+                        <DesktopSearch />
                         <LocationReportButton />
                     </div>
 

@@ -301,291 +301,330 @@ const MapSearch: React.FC = () => {
   }, [isMobile, query]);
 
   return (
-    <>
-      {/* Mobile: Search Icon (collapsed) */}
-      {isMobile && !isExpanded && (
-        <div className="absolute top-4 right-4 z-30">
-          <button
-            onClick={handleSearchToggle}
-            className="bg-white rounded-full p-3 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-200"
-          >
-            <Search className="w-5 h-5 text-gray-600" />
-          </button>
-        </div>
-      )}
-
-      {/* Mobile: Expanded Search (full width) */}
-      {isMobile && isExpanded && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-black bg-opacity-20 z-[45]"
-            onClick={handleSearchToggle}
-          />
-
-          {/* Search Panel */}
-          <div
-            className={`fixed top-0 left-0 right-0 z-[60] bg-white shadow-lg transform transition-transform duration-300 ease-out ${
-              isExpanded ? 'translate-y-0' : '-translate-y-full'
-            }`}
-            ref={searchRef}
-          >
-          <div className="p-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                ref={inputRef}
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onFocus={handleInputFocus}
-                onKeyDown={handleKeyDown}
-                placeholder="Search for places in Nigeria..."
-                className="w-full pl-12 pr-12 py-4 bg-gray-50 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base placeholder-gray-400"
-              />
-              <button
-                onClick={handleSearchToggle}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              {/* Loading indicator */}
-              {isLoading && (
-                <div className="absolute right-12 top-1/2 transform -translate-y-1/2">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Mobile Search Results */}
-          {(showResults || showRecent) && (
-            <div className="bg-white border-t border-gray-200 max-h-96 overflow-y-auto">
-              {/* Recent Searches */}
-              {showRecent && recentSearches.length > 0 && (
-                <div>
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
-                    <div className="flex items-center text-sm font-medium text-gray-600">
-                      <Clock className="w-4 h-4 mr-2" />
-                      Recent Searches
-                    </div>
-                    <button
-                      onClick={clearRecentSearches}
-                      className="text-sm text-blue-600 hover:text-blue-800"
-                    >
-                      Clear
-                    </button>
-                  </div>
-                  {recentSearches.map((recent, index) => (
-                    <button
-                      key={recent.id}
-                      onClick={() => handleRecentSelect(recent)}
-                      className={`w-full px-4 py-4 text-left border-b border-gray-50 last:border-b-0 transition-colors ${
-                        showRecent && selectedIndex === index
-                          ? 'bg-blue-50 border-blue-100'
-                          : 'hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex items-start">
-                        <MapPin className="w-5 h-5 mr-3 mt-0.5 text-gray-400 flex-shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <div className="font-medium text-base text-gray-900 truncate">
-                            {recent.name}
-                          </div>
-                          <div className="text-sm text-gray-500 truncate">
-                            {recent.display_name}
-                          </div>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Search Results */}
-              {showResults && results.length > 0 && (
-                <div>
-                  {showRecent && recentSearches.length > 0 && (
-                    <div className="border-t border-gray-100" />
-                  )}
-                  {results.map((result, index) => (
-                    <button
-                      key={result.id}
-                      onClick={() => handleResultSelect(result)}
-                      className={`w-full px-4 py-4 text-left border-b border-gray-50 last:border-b-0 transition-colors ${
-                        showResults && selectedIndex === index
-                          ? 'bg-blue-50 border-blue-100'
-                          : 'hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex items-start">
-                        <MapPin className="w-5 h-5 mr-3 mt-0.5 text-blue-500 flex-shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <div className="font-medium text-base text-gray-900 truncate">
-                            {result.name}
-                          </div>
-                          <div className="text-sm text-gray-500 truncate">
-                            {result.display_name}
-                          </div>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* No Results */}
-              {showResults && query.length >= 2 && results.length === 0 && !isLoading && (
-                <div className="px-4 py-8 text-center text-gray-500">
-                  <MapPin className="w-10 h-10 mx-auto mb-3 text-gray-300" />
-                  <div className="text-base">No places found</div>
-                  <div className="text-sm">Try searching with a different term</div>
-                </div>
-              )}
-            </div>
-          )}
-          </div>
-        </>
-      )}
-
-      {/* Desktop: Expandable Search Bar */}
-      {!isMobile && (
-        <div
-          className={`absolute top-4 left-4 z-30 transition-all duration-300 ease-out ${
-            isExpanded ? 'w-96 lg:w-[500px]' : 'w-12 h-12'
-          }`}
-          ref={searchRef}
-        >
-          {!isExpanded ? (
-            /* Desktop: Search Icon (collapsed) */
-            <button
-              onClick={handleSearchToggle}
-              className="w-12 h-12 bg-white rounded-lg shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-200 flex items-center justify-center"
-            >
-              <Search className="w-5 h-5 text-gray-600" />
-            </button>
-          ) : (
-            /* Desktop: Expanded Search */
-            <div className="bg-white rounded-lg shadow-lg border border-gray-200">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onFocus={handleInputFocus}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Search for places in Nigeria..."
-                  className="w-full pl-10 pr-10 py-3 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm placeholder-gray-400"
-                />
-                <button
-                  onClick={handleSearchToggle}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-
-                {/* Loading indicator */}
-                {isLoading && (
-                  <div className="absolute right-10 top-1/2 transform -translate-y-1/2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-                  </div>
-                )}
+      <>
+          {/* Mobile: Search Icon (collapsed) */}
+          {isMobile && !isExpanded && (
+              <div className="absolute top-4 right-4 z-30">
+                  <button
+                      onClick={handleSearchToggle}
+                      className="bg-white rounded-full p-3 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-200"
+                  >
+                      <Search className="w-5 h-5 text-gray-600" />
+                  </button>
               </div>
-
-              {/* Desktop Search Results */}
-              {(showResults || showRecent) && (
-                <div className="absolute top-full mt-1 w-full bg-white rounded-lg shadow-xl border border-gray-200 max-h-80 overflow-y-auto z-[60]">
-                  {/* Recent Searches */}
-                  {showRecent && recentSearches.length > 0 && (
-                    <div>
-                      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100">
-                        <div className="flex items-center text-xs font-medium text-gray-500">
-                          <Clock className="w-3 h-3 mr-1" />
-                          Recent Searches
-                        </div>
-                        <button
-                          onClick={clearRecentSearches}
-                          className="text-xs text-blue-600 hover:text-blue-800"
-                        >
-                          Clear
-                        </button>
-                      </div>
-                      {recentSearches.map((recent, index) => (
-                        <button
-                          key={recent.id}
-                          onClick={() => handleRecentSelect(recent)}
-                          className={`w-full px-4 py-3 text-left border-b border-gray-50 last:border-b-0 transition-colors ${
-                            showRecent && selectedIndex === index
-                              ? 'bg-blue-50 border-blue-100'
-                              : 'hover:bg-gray-50'
-                          }`}
-                        >
-                          <div className="flex items-start">
-                            <MapPin className="w-4 h-4 mr-3 mt-0.5 text-gray-400 flex-shrink-0" />
-                            <div className="min-w-0 flex-1">
-                              <div className="font-medium text-sm text-gray-900 truncate">
-                                {recent.name}
-                              </div>
-                              <div className="text-xs text-gray-500 truncate">
-                                {recent.display_name}
-                              </div>
-                            </div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Search Results */}
-                  {showResults && results.length > 0 && (
-                    <div>
-                      {showRecent && recentSearches.length > 0 && (
-                        <div className="border-t border-gray-100" />
-                      )}
-                      {results.map((result, index) => (
-                        <button
-                          key={result.id}
-                          onClick={() => handleResultSelect(result)}
-                          className={`w-full px-4 py-3 text-left border-b border-gray-50 last:border-b-0 transition-colors ${
-                            showResults && selectedIndex === index
-                              ? 'bg-blue-50 border-blue-100'
-                              : 'hover:bg-gray-50'
-                          }`}
-                        >
-                          <div className="flex items-start">
-                            <MapPin className="w-4 h-4 mr-3 mt-0.5 text-blue-500 flex-shrink-0" />
-                            <div className="min-w-0 flex-1">
-                              <div className="font-medium text-sm text-gray-900 truncate">
-                                {result.name}
-                              </div>
-                              <div className="text-xs text-gray-500 truncate">
-                                {result.display_name}
-                              </div>
-                            </div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* No Results */}
-                  {showResults && query.length >= 2 && results.length === 0 && !isLoading && (
-                    <div className="px-4 py-6 text-center text-gray-500">
-                      <MapPin className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                      <div className="text-sm">No places found</div>
-                      <div className="text-xs">Try searching with a different term</div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
           )}
-        </div>
-      )}
-    </>
+
+          {/* Mobile: Expanded Search (full width) */}
+          {isMobile && isExpanded && (
+              <>
+                  {/* Backdrop */}
+                  <div
+                      className="fixed inset-0 bg-black bg-opacity-20 z-[45]"
+                      onClick={handleSearchToggle}
+                  />
+
+                  {/* Search Panel */}
+                  <div
+                      className={`fixed top-0 left-0 right-0 z-[60] bg-white shadow-lg transform transition-transform duration-300 ease-out ${
+                          isExpanded ? "translate-y-0" : "-translate-y-full"
+                      }`}
+                      ref={searchRef}
+                  >
+                      <div className="p-4">
+                          <div className="relative">
+                              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                              <input
+                                  ref={inputRef}
+                                  type="text"
+                                  value={query}
+                                  onChange={(e) => setQuery(e.target.value)}
+                                  onFocus={handleInputFocus}
+                                  onKeyDown={handleKeyDown}
+                                  placeholder="Search for places in Nigeria..."
+                                  className="w-full pl-12 pr-12 py-4 bg-gray-50 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base placeholder-gray-400"
+                              />
+                              <button
+                                  onClick={handleSearchToggle}
+                                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                              >
+                                  <X className="w-5 h-5" />
+                              </button>
+
+                              {/* Loading indicator */}
+                              {isLoading && (
+                                  <div className="absolute right-12 top-1/2 transform -translate-y-1/2">
+                                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+                                  </div>
+                              )}
+                          </div>
+                      </div>
+
+                      {/* Mobile Search Results */}
+                      {(showResults || showRecent) && (
+                          <div className="bg-white border-t border-gray-200 max-h-96 overflow-y-auto">
+                              {/* Recent Searches */}
+                              {showRecent && recentSearches.length > 0 && (
+                                  <div>
+                                      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
+                                          <div className="flex items-center text-sm font-medium text-gray-600">
+                                              <Clock className="w-4 h-4 mr-2" />
+                                              Recent Searches
+                                          </div>
+                                          <button
+                                              onClick={clearRecentSearches}
+                                              className="text-sm text-blue-600 hover:text-blue-800"
+                                          >
+                                              Clear
+                                          </button>
+                                      </div>
+                                      {recentSearches.map((recent, index) => (
+                                          <button
+                                              key={recent.id}
+                                              onClick={() =>
+                                                  handleRecentSelect(recent)
+                                              }
+                                              className={`w-full px-4 py-4 text-left border-b border-gray-50 last:border-b-0 transition-colors ${
+                                                  showRecent &&
+                                                  selectedIndex === index
+                                                      ? "bg-blue-50 border-blue-100"
+                                                      : "hover:bg-gray-50"
+                                              }`}
+                                          >
+                                              <div className="flex items-start">
+                                                  <MapPin className="w-5 h-5 mr-3 mt-0.5 text-gray-400 flex-shrink-0" />
+                                                  <div className="min-w-0 flex-1">
+                                                      <div className="font-medium text-base text-gray-900 truncate">
+                                                          {recent.name}
+                                                      </div>
+                                                      <div className="text-sm text-gray-500 truncate">
+                                                          {recent.display_name}
+                                                      </div>
+                                                  </div>
+                                              </div>
+                                          </button>
+                                      ))}
+                                  </div>
+                              )}
+
+                              {/* Search Results */}
+                              {showResults && results.length > 0 && (
+                                  <div>
+                                      {showRecent &&
+                                          recentSearches.length > 0 && (
+                                              <div className="border-t border-gray-100" />
+                                          )}
+                                      {results.map((result, index) => (
+                                          <button
+                                              key={result.id}
+                                              onClick={() =>
+                                                  handleResultSelect(result)
+                                              }
+                                              className={`w-full px-4 py-4 text-left border-b border-gray-50 last:border-b-0 transition-colors ${
+                                                  showResults &&
+                                                  selectedIndex === index
+                                                      ? "bg-blue-50 border-blue-100"
+                                                      : "hover:bg-gray-50"
+                                              }`}
+                                          >
+                                              <div className="flex items-start">
+                                                  <MapPin className="w-5 h-5 mr-3 mt-0.5 text-blue-500 flex-shrink-0" />
+                                                  <div className="min-w-0 flex-1">
+                                                      <div className="font-medium text-base text-gray-900 truncate">
+                                                          {result.name}
+                                                      </div>
+                                                      <div className="text-sm text-gray-500 truncate">
+                                                          {result.display_name}
+                                                      </div>
+                                                  </div>
+                                              </div>
+                                          </button>
+                                      ))}
+                                  </div>
+                              )}
+
+                              {/* No Results */}
+                              {showResults &&
+                                  query.length >= 2 &&
+                                  results.length === 0 &&
+                                  !isLoading && (
+                                      <div className="px-4 py-8 text-center text-gray-500">
+                                          <MapPin className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+                                          <div className="text-base">
+                                              No places found
+                                          </div>
+                                          <div className="text-sm">
+                                              Try searching with a different
+                                              term
+                                          </div>
+                                      </div>
+                                  )}
+                          </div>
+                      )}
+                  </div>
+              </>
+          )}
+
+          {/* Desktop: Expandable Search Bar - Hidden since we have DesktopSearch component */}
+          {false && !isMobile && (
+              <div
+                  className={`absolute top-4 left-4 z-30 transition-all duration-300 ease-out ${
+                      isExpanded ? "w-96 lg:w-[500px]" : "w-12 h-12"
+                  }`}
+                  ref={searchRef}
+              >
+                  {!isExpanded ? (
+                      /* Desktop: Search Icon (collapsed) */
+                      <button
+                          onClick={handleSearchToggle}
+                          className="w-12 h-12 bg-white rounded-lg shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-200 flex items-center justify-center"
+                      >
+                          <Search className="w-5 h-5 text-gray-600" />
+                      </button>
+                  ) : (
+                      /* Desktop: Expanded Search */
+                      <div className="bg-white rounded-lg shadow-lg border border-gray-200">
+                          <div className="relative">
+                              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                              <input
+                                  ref={inputRef}
+                                  type="text"
+                                  value={query}
+                                  onChange={(e) => setQuery(e.target.value)}
+                                  onFocus={handleInputFocus}
+                                  onKeyDown={handleKeyDown}
+                                  placeholder="Search for places in Nigeria..."
+                                  className="w-full pl-10 pr-10 py-3 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm placeholder-gray-400"
+                              />
+                              <button
+                                  onClick={handleSearchToggle}
+                                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                              >
+                                  <X className="w-4 h-4" />
+                              </button>
+
+                              {/* Loading indicator */}
+                              {isLoading && (
+                                  <div className="absolute right-10 top-1/2 transform -translate-y-1/2">
+                                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                                  </div>
+                              )}
+                          </div>
+
+                          {/* Desktop Search Results */}
+                          {(showResults || showRecent) && (
+                              <div className="absolute top-full mt-1 w-full bg-white rounded-lg shadow-xl border border-gray-200 max-h-80 overflow-y-auto z-[60]">
+                                  {/* Recent Searches */}
+                                  {showRecent && recentSearches.length > 0 && (
+                                      <div>
+                                          <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100">
+                                              <div className="flex items-center text-xs font-medium text-gray-500">
+                                                  <Clock className="w-3 h-3 mr-1" />
+                                                  Recent Searches
+                                              </div>
+                                              <button
+                                                  onClick={clearRecentSearches}
+                                                  className="text-xs text-blue-600 hover:text-blue-800"
+                                              >
+                                                  Clear
+                                              </button>
+                                          </div>
+                                          {recentSearches.map(
+                                              (recent, index) => (
+                                                  <button
+                                                      key={recent.id}
+                                                      onClick={() =>
+                                                          handleRecentSelect(
+                                                              recent
+                                                          )
+                                                      }
+                                                      className={`w-full px-4 py-3 text-left border-b border-gray-50 last:border-b-0 transition-colors ${
+                                                          showRecent &&
+                                                          selectedIndex ===
+                                                              index
+                                                              ? "bg-blue-50 border-blue-100"
+                                                              : "hover:bg-gray-50"
+                                                      }`}
+                                                  >
+                                                      <div className="flex items-start">
+                                                          <MapPin className="w-4 h-4 mr-3 mt-0.5 text-gray-400 flex-shrink-0" />
+                                                          <div className="min-w-0 flex-1">
+                                                              <div className="font-medium text-sm text-gray-900 truncate">
+                                                                  {recent.name}
+                                                              </div>
+                                                              <div className="text-xs text-gray-500 truncate">
+                                                                  {
+                                                                      recent.display_name
+                                                                  }
+                                                              </div>
+                                                          </div>
+                                                      </div>
+                                                  </button>
+                                              )
+                                          )}
+                                      </div>
+                                  )}
+
+                                  {/* Search Results */}
+                                  {showResults && results.length > 0 && (
+                                      <div>
+                                          {showRecent &&
+                                              recentSearches.length > 0 && (
+                                                  <div className="border-t border-gray-100" />
+                                              )}
+                                          {results.map((result, index) => (
+                                              <button
+                                                  key={result.id}
+                                                  onClick={() =>
+                                                      handleResultSelect(result)
+                                                  }
+                                                  className={`w-full px-4 py-3 text-left border-b border-gray-50 last:border-b-0 transition-colors ${
+                                                      showResults &&
+                                                      selectedIndex === index
+                                                          ? "bg-blue-50 border-blue-100"
+                                                          : "hover:bg-gray-50"
+                                                  }`}
+                                              >
+                                                  <div className="flex items-start">
+                                                      <MapPin className="w-4 h-4 mr-3 mt-0.5 text-blue-500 flex-shrink-0" />
+                                                      <div className="min-w-0 flex-1">
+                                                          <div className="font-medium text-sm text-gray-900 truncate">
+                                                              {result.name}
+                                                          </div>
+                                                          <div className="text-xs text-gray-500 truncate">
+                                                              {
+                                                                  result.display_name
+                                                              }
+                                                          </div>
+                                                      </div>
+                                                  </div>
+                                              </button>
+                                          ))}
+                                      </div>
+                                  )}
+
+                                  {/* No Results */}
+                                  {showResults &&
+                                      query.length >= 2 &&
+                                      results.length === 0 &&
+                                      !isLoading && (
+                                          <div className="px-4 py-6 text-center text-gray-500">
+                                              <MapPin className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                                              <div className="text-sm">
+                                                  No places found
+                                              </div>
+                                              <div className="text-xs">
+                                                  Try searching with a different
+                                                  term
+                                              </div>
+                                          </div>
+                                      )}
+                              </div>
+                          )}
+                      </div>
+                  )}
+              </div>
+          )}
+      </>
   );
 };
 
