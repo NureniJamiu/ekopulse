@@ -88,7 +88,13 @@ scheduledNotificationService.startScheduledTasks();
 
 const PORT = process.env.PORT || 5000;
 
-server.listen(PORT, () => {
-    logger.info(`🚀 EkoPulse server running on port ${PORT}`);
-    logger.info(`📍 Environment: ${process.env.NODE_ENV}`);
-});
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+    server.listen(PORT, () => {
+        logger.info(`🚀 EkoPulse server running on port ${PORT}`);
+        logger.info(`📍 Environment: ${process.env.NODE_ENV}`);
+    });
+}
+
+// Export for Vercel
+export default app;

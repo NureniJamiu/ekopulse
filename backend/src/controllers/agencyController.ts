@@ -341,7 +341,7 @@ export const getMyAgencyIssues = async (
         if (!agency) {
             res.status(401).json({
                 success: false,
-                error: 'Agency authentication required'
+                error: "Agency authentication required",
             });
             return;
         }
@@ -562,15 +562,15 @@ export const getMyAgencyStats = async (
 ): Promise<void> => {
     try {
         const agency = req.agency;
-        
+
         if (!agency) {
             res.status(401).json({
                 success: false,
-                error: 'Agency authentication required'
+                error: "Agency authentication required",
             });
             return;
         }
-        
+
         const agencyId = agency._id;
 
         // Build match criteria - filter by assigned agency and agency's issue types
@@ -1301,15 +1301,15 @@ export const updateIssueStatusByAgency = async (
 ): Promise<void> => {
     try {
         const agency = req.agency;
-        
+
         if (!agency) {
             res.status(401).json({
                 success: false,
-                error: 'Agency authentication required'
+                error: "Agency authentication required",
             });
             return;
         }
-        
+
         const { id } = req.params;
         const { status, agencyNotes } = req.body;
 
