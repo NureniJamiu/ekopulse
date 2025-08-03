@@ -227,17 +227,17 @@ const AgencyDashboardPage: React.FC = () => {
             {/* Header */}
             <div className="bg-white shadow-sm border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center py-6">
-                        <div className="flex items-center gap-4">
-                            <div className="p-2 bg-blue-100 rounded-lg">
-                                <Building2 className="w-8 h-8 text-blue-600" />
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-4 sm:py-6 gap-4">
+                        <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                            <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                                <Building2 className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />
                             </div>
-                            <div>
-                                <h1 className="text-2xl font-bold text-gray-900">
+                            <div className="min-w-0 flex-1">
+                                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">
                                     {agency?.name}
                                 </h1>
-                                <div className="flex items-center gap-2 mt-1">
-                                    <p className="text-sm text-gray-600">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 mt-1">
+                                    <p className="text-xs sm:text-sm text-gray-600 flex-shrink-0">
                                         {agency?.type
                                             ?.replace("_", " ")
                                             .toUpperCase()}{" "}
@@ -246,11 +246,16 @@ const AgencyDashboardPage: React.FC = () => {
                                     {agency?.issueTypes &&
                                         agency.issueTypes.length > 0 && (
                                             <>
-                                                <span className="text-gray-400">
+                                                <span className="text-gray-400 hidden sm:inline">
                                                     •
                                                 </span>
-                                                <p className="text-sm text-blue-600">
-                                                    Handles:{" "}
+                                                <p className="text-xs sm:text-sm text-blue-600 truncate">
+                                                    <span className="hidden sm:inline">
+                                                        Handles:{" "}
+                                                    </span>
+                                                    <span className="sm:hidden">
+                                                        📋{" "}
+                                                    </span>
                                                     {agency.issueTypes
                                                         .map(
                                                             (type) =>
@@ -266,20 +271,21 @@ const AgencyDashboardPage: React.FC = () => {
                                 </div>
                             </div>
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-end sm:justify-start gap-3 sm:gap-4 flex-shrink-0">
                             <button
                                 onClick={logout}
-                                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                                className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors text-sm"
                             >
-                                <LogOut className="w-5 h-5" />
-                                <span>Logout</span>
+                                <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
+                                <span className="hidden sm:inline">Logout</span>
+                                <span className="sm:hidden">Exit</span>
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
                 {loading ? (
                     <div className="flex items-center justify-center py-12">
                         <LoadingSpinner />
@@ -288,14 +294,14 @@ const AgencyDashboardPage: React.FC = () => {
                     <div className="space-y-8">
                         {/* Stats Cards */}
                         {stats && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                <div className="bg-white rounded-lg shadow p-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                                <div className="bg-white rounded-lg shadow p-4 sm:p-6">
                                     <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-sm font-medium text-gray-600">
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">
                                                 Total Issues
                                             </p>
-                                            <p className="text-2xl font-bold text-gray-900">
+                                            <p className="text-xl sm:text-2xl font-bold text-gray-900">
                                                 {stats.statusBreakdown.reduce(
                                                     (total, item) =>
                                                         total + item.count,
@@ -303,50 +309,50 @@ const AgencyDashboardPage: React.FC = () => {
                                                 )}
                                             </p>
                                         </div>
-                                        <FileText className="w-8 h-8 text-blue-600" />
+                                        <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0 ml-2" />
                                     </div>
                                 </div>
 
-                                <div className="bg-white rounded-lg shadow p-6">
+                                <div className="bg-white rounded-lg shadow p-4 sm:p-6">
                                     <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-sm font-medium text-gray-600">
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">
                                                 Under Review
                                             </p>
-                                            <p className="text-2xl font-bold text-blue-600">
+                                            <p className="text-xl sm:text-2xl font-bold text-blue-600">
                                                 {stats.statusBreakdown.find(
                                                     (s) =>
                                                         s._id === "under_review"
                                                 )?.count || 0}
                                             </p>
                                         </div>
-                                        <Clock className="w-8 h-8 text-blue-600" />
+                                        <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0 ml-2" />
                                     </div>
                                 </div>
 
-                                <div className="bg-white rounded-lg shadow p-6">
+                                <div className="bg-white rounded-lg shadow p-4 sm:p-6">
                                     <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-sm font-medium text-gray-600">
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">
                                                 Resolved
                                             </p>
-                                            <p className="text-2xl font-bold text-green-600">
+                                            <p className="text-xl sm:text-2xl font-bold text-green-600">
                                                 {stats.statusBreakdown.find(
                                                     (s) => s._id === "resolved"
                                                 )?.count || 0}
                                             </p>
                                         </div>
-                                        <CheckCircle className="w-8 h-8 text-green-600" />
+                                        <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 flex-shrink-0 ml-2" />
                                     </div>
                                 </div>
 
-                                <div className="bg-white rounded-lg shadow p-6">
+                                <div className="bg-white rounded-lg shadow p-4 sm:p-6">
                                     <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-sm font-medium text-gray-600">
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">
                                                 Avg Resolution
                                             </p>
-                                            <p className="text-2xl font-bold text-purple-600">
+                                            <p className="text-xl sm:text-2xl font-bold text-purple-600">
                                                 {stats.avgResolutionTime
                                                     ? `${Math.round(
                                                           stats.avgResolutionTime /
@@ -358,30 +364,30 @@ const AgencyDashboardPage: React.FC = () => {
                                                     : "N/A"}
                                             </p>
                                         </div>
-                                        <TrendingUp className="w-8 h-8 text-purple-600" />
+                                        <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 flex-shrink-0 ml-2" />
                                     </div>
                                 </div>
                             </div>
                         )}
 
                         {/* Filters */}
-                        <div className="bg-white rounded-lg shadow p-6">
-                            <div className="flex items-center gap-4 mb-4">
-                                <Filter className="w-5 h-5 text-gray-600" />
-                                <h3 className="text-lg font-medium text-gray-900">
+                        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+                            <div className="flex items-center gap-3 sm:gap-4 mb-4">
+                                <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 flex-shrink-0" />
+                                <h3 className="text-base sm:text-lg font-medium text-gray-900">
                                     Filter Issues
                                 </h3>
                             </div>
                             {agency?.issueTypes &&
                                 agency.issueTypes.length > 0 && (
                                     <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                        <p className="text-sm text-blue-800">
+                                        <p className="text-xs sm:text-sm text-blue-800">
                                             <span className="font-medium">
                                                 Note:
                                             </span>{" "}
                                             Only showing issues of types your
                                             agency handles:{" "}
-                                            <span className="font-semibold">
+                                            <span className="font-semibold break-words">
                                                 {agency.issueTypes
                                                     .map(
                                                         (type) =>
@@ -395,7 +401,7 @@ const AgencyDashboardPage: React.FC = () => {
                                         </p>
                                     </div>
                                 )}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         Status
@@ -489,14 +495,14 @@ const AgencyDashboardPage: React.FC = () => {
 
                         {/* Issues List */}
                         <div className="bg-white rounded-lg shadow">
-                            <div className="p-6 border-b border-gray-200">
-                                <h3 className="text-lg font-medium text-gray-900">
+                            <div className="p-4 sm:p-6 border-b border-gray-200">
+                                <h3 className="text-base sm:text-lg font-medium text-gray-900">
                                     Issues ({filteredIssues.length})
                                 </h3>
                             </div>
 
                             {filteredIssues.length === 0 ? (
-                                <div className="p-12">
+                                <div className="p-8 sm:p-12">
                                     <EmptyState
                                         icon={FileText}
                                         title="No issues found"
@@ -504,8 +510,8 @@ const AgencyDashboardPage: React.FC = () => {
                                     />
                                 </div>
                             ) : (
-                                <div className="p-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <div className="p-4 sm:p-6">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                                         {filteredIssues.map((issue) => (
                                             <IssueCard
                                                 key={issue._id}

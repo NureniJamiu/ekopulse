@@ -114,16 +114,16 @@ const AuthorityDashboardPage: React.FC = () => {
     }
 
     return (
-        <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
             {/* Header */}
-            <div className="mb-8">
-                <div className="flex items-center gap-3 mb-2">
-                    <Shield className="h-8 w-8 text-emerald-600" />
-                    <h1 className="text-3xl font-bold text-gray-900">
+            <div className="mb-6 sm:mb-8">
+                <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                    <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-emerald-600 flex-shrink-0" />
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
                         Authority Dashboard
                     </h1>
                 </div>
-                <p className="text-gray-600">
+                <p className="text-sm sm:text-base text-gray-600">
                     Monitor and manage environmental issue reports across Lagos
                 </p>
             </div>
@@ -132,67 +132,67 @@ const AuthorityDashboardPage: React.FC = () => {
             <NotificationAdminPanel />
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div className="card">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                <div className="card p-4 sm:p-6">
                     <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-gray-600">
+                        <div className="min-w-0 flex-1">
+                            <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">
                                 Total Reports
                             </p>
-                            <p className="text-2xl font-bold text-gray-900">
+                            <p className="text-xl sm:text-2xl font-bold text-gray-900">
                                 {stats.total}
                             </p>
                         </div>
-                        <div className="p-3 bg-blue-100 rounded-full">
-                            <TrendingUp className="h-6 w-6 text-blue-600" />
+                        <div className="p-2 sm:p-3 bg-blue-100 rounded-full flex-shrink-0 ml-2">
+                            <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
                         </div>
                     </div>
                 </div>
 
-                <div className="card">
+                <div className="card p-4 sm:p-6">
                     <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-gray-600">
+                        <div className="min-w-0 flex-1">
+                            <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">
                                 New Reports
                             </p>
-                            <p className="text-2xl font-bold text-orange-600">
+                            <p className="text-xl sm:text-2xl font-bold text-orange-600">
                                 {stats.reported}
                             </p>
                         </div>
-                        <div className="p-3 bg-orange-100 rounded-full">
-                            <AlertCircle className="h-6 w-6 text-orange-600" />
+                        <div className="p-2 sm:p-3 bg-orange-100 rounded-full flex-shrink-0 ml-2">
+                            <AlertCircle className="h-4 w-4 sm:h-6 sm:w-6 text-orange-600" />
                         </div>
                     </div>
                 </div>
 
-                <div className="card">
+                <div className="card p-4 sm:p-6">
                     <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-gray-600">
+                        <div className="min-w-0 flex-1">
+                            <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">
                                 Under Review
                             </p>
-                            <p className="text-2xl font-bold text-blue-600">
+                            <p className="text-xl sm:text-2xl font-bold text-blue-600">
                                 {stats.under_review}
                             </p>
                         </div>
-                        <div className="p-3 bg-blue-100 rounded-full">
-                            <Clock className="h-6 w-6 text-blue-600" />
+                        <div className="p-2 sm:p-3 bg-blue-100 rounded-full flex-shrink-0 ml-2">
+                            <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
                         </div>
                     </div>
                 </div>
 
-                <div className="card">
+                <div className="card p-4 sm:p-6">
                     <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-gray-600">
+                        <div className="min-w-0 flex-1">
+                            <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">
                                 Resolved
                             </p>
-                            <p className="text-2xl font-bold text-green-600">
+                            <p className="text-xl sm:text-2xl font-bold text-green-600">
                                 {stats.resolved}
                             </p>
                         </div>
-                        <div className="p-3 bg-green-100 rounded-full">
-                            <CheckCircle className="h-6 w-6 text-green-600" />
+                        <div className="p-2 sm:p-3 bg-green-100 rounded-full flex-shrink-0 ml-2">
+                            <CheckCircle className="h-4 w-4 sm:h-6 sm:w-6 text-green-600" />
                         </div>
                     </div>
                 </div>
