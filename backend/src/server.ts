@@ -8,9 +8,6 @@ import rateLimit from 'express-rate-limit';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 
-// Import types to ensure they're loaded
-import './types/express';
-
 import connectDB from './config/db';
 import errorHandler from './middleware/errorHandler';
 import authRoutes from './routes/authRoutes';
