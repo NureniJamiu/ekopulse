@@ -10,6 +10,7 @@ import { uploadToCloudinary } from "../config/cloudinary";
 import { AuthenticatedRequest } from "../types/express";
 import AgencyAssignmentService from "../services/AgencyAssignmentService";
 import NotificationService from "../services/NotificationService";
+import { getUniversalNotificationService } from "../services/UniversalNotificationService";
 
 // Configure multer for memory storage
 const upload = multer({
@@ -206,10 +207,9 @@ export const createIssue = async (
             }
         }
 
-        // Emit real-time update to all users
-        if (req.io) {
-            req.io.emit("new_issue", issue);
-        }
+        // Send real-time notifications using Universal Notification Service
+        const notificationService = getUniversalNotificationService(req.io);
+        notificationService.notifyNewIssue(issue, req.auth?.userId);
 
         res.status(201).json({
             success: true,
@@ -349,9 +349,9 @@ export const updateIssueStatus = async (
             const notificationService = new NotificationService(req.io);
             await notificationService.notifyIssueStatusUpdate(issue, user);
 
-            // Emit real-time update
-            req.io.emit("issue_updated", issue);
-            req.io.to(`issue_${issue._id}`).emit("issue_status_updated", issue);
+            // Send real-time notifications using Universal Notification Service
+            const universalNotificationService = getUniversalNotificationService(req.io);
+            universalNotificationService.notifyIssueUpdate(issue, req.auth?.userId);
         }
 
         res.status(200).json({

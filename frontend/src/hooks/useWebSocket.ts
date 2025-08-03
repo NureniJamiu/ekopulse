@@ -5,6 +5,7 @@ import { IssueType } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import logger from '../utils/logger';
+import { useSSE } from './useSSE';
 
 interface UseWebSocketReturn {
   socket: Socket | null;
@@ -38,6 +39,40 @@ export const useWebSocket = (
     const onIssueUpdateRef = useRef(onIssueUpdate);
     const onMapUpdateRef = useRef(onMapUpdate);
     const onNotificationRef = useRef(onNotification);
+
+    // SSE fallback for production
+    const { isConnected: sseConnected } = useSSE((message) => {
+        logger.info('SSE message received:', message);
+
+        switch (message.type) {
+            case 'new_issue':
+                if (onNewIssueRef.current && message.data) {
+                    onNewIssueRef.current(message.data);
+                }
+                break;
+            case 'issue_updated':
+                if (onIssueUpdateRef.current && message.data) {
+                    onIssueUpdateRef.current(message.data);
+                }
+                break;
+            case 'notification':
+                if (onNotificationRef.current && message.data) {
+                    onNotificationRef.current(message.data);
+                }
+                break;
+            case 'heartbeat':
+                // Just keep connection alive
+                break;
+            case 'connected':
+                logger.info('SSE fallback connected');
+                break;
+            default:
+                logger.info('Unknown SSE message type:', message.type);
+        }
+    });
+
+    // Update connection status to include SSE fallback
+    const actuallyConnected = isConnected || sseConnected;
 
     useEffect(() => {
         onNewIssueRef.current = onNewIssue;
@@ -226,7 +261,7 @@ export const useWebSocket = (
 
     return {
         socket,
-        isConnected,
+        isConnected: actuallyConnected,
         subscribeToIssue,
         unsubscribeFromIssue,
         subscribeToLocation,

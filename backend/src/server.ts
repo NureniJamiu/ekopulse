@@ -14,7 +14,9 @@ import authRoutes from './routes/authRoutes';
 import issueRoutes from './routes/issueRoutes';
 import agencyRoutes from './routes/agencyRoutes';
 import notificationRoutes from './routes/notificationRoutes';
+import sseRoutes from './routes/sseRoutes';
 import { initializeSocketServer } from './websockets/socketServer';
+import { getUniversalNotificationService } from './services/UniversalNotificationService';
 import ScheduledNotificationService from "./services/ScheduledNotificationService";
 import logger from './utils/logger';
 
@@ -74,6 +76,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/issues", issueRoutes);
 app.use("/api/agencies", agencyRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/sse", sseRoutes);
 
 app.get("/api/health", (req: Request, res: Response) => {
     res.status(200).json({
@@ -91,6 +94,10 @@ if (io) {
     const scheduledNotificationService = new ScheduledNotificationService(io);
     scheduledNotificationService.startScheduledTasks();
 }
+
+// Initialize Universal Notification Service (works with or without WebSocket)
+const universalNotificationService = getUniversalNotificationService(io);
+logger.info(`🔔 Universal Notification Service initialized (WebSocket: ${io ? 'enabled' : 'disabled'}, SSE: enabled)`);
 
 const PORT = process.env.PORT || 5000;
 
