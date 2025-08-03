@@ -1,14 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { requireAuth } from '../config/clerk';
-import { Server as SocketIOServer } from 'socket.io';
-
-export interface AuthenticatedRequest extends Request {
-  auth?: {
-    userId: string;
-    sessionId: string;
-  };
-  io?: SocketIOServer;
-}
+import { AuthenticatedRequest } from "../types/express";
 
 const clerkAuth = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   console.log(`[ClerkAuth] Authenticating request to: ${req.method} ${req.path}`);

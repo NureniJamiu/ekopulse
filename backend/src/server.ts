@@ -61,14 +61,6 @@ app.use("/api/", limiter);
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-declare global {
-    namespace Express {
-        interface Request {
-            io: SocketIOServer;
-        }
-    }
-}
-
 app.use((req: Request, res: Response, next) => {
     req.io = io;
     next();

@@ -53,7 +53,9 @@ export class ScheduledNotificationService {
       const agencies = await Agency.find({ isActive: true });
 
       for (const agency of agencies) {
-        await this.notificationService.sendWeeklySummary(agency._id.toString());
+        await this.notificationService.sendWeeklySummary(
+            agency._id?.toString() || ""
+        );
       }
 
       console.log(`[ScheduledNotificationService] Weekly summaries sent to ${agencies.length} agencies`);

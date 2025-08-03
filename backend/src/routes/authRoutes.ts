@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { getOrCreateUser, updateUserRole, getCurrentUser, agencyLogin } from '../controllers/authController';
 import clerkAuth from '../middleware/clerkAuth';
 
-const router = Router();
+const router: Router = Router();
 
 // Public routes (no authentication required)
 // POST /api/auth/agency/login - Agency login

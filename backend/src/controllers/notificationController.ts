@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import { AuthenticatedRequest } from '../middleware/clerkAuth';
-import User from '../models/User';
-import NotificationService from '../services/NotificationService';
+import { AuthenticatedRequest } from "../types/express";
+import User from "../models/User";
+import NotificationService from "../services/NotificationService";
 import ScheduledNotificationService from "../services/ScheduledNotificationService";
 
 export const getNotifications = async (
@@ -28,7 +28,7 @@ export const getNotifications = async (
         }
 
         // Determine recipient ID based on user role and request
-        let recipientId = user._id.toString();
+        let recipientId = user._id?.toString() || "";
         let actualRecipientType: "user" | "agency" = "user";
 
         if (recipientType === "agency" && user.agency) {
@@ -36,31 +36,41 @@ export const getNotifications = async (
             actualRecipientType = "agency";
         }
 
-        const notificationService = new NotificationService(req.io);
+        if (req.io) {
+            const notificationService = new NotificationService(req.io);
 
-        const result = await notificationService.getNotifications(
-            recipientId,
-            actualRecipientType,
-            {
-                status: status as any,
-                type: type as any,
-                limit: parseInt(limit as string),
-                skip:
-                    (parseInt(page as string) - 1) * parseInt(limit as string),
-            }
-        );
+            const result = await notificationService.getNotifications(
+                recipientId,
+                actualRecipientType,
+                {
+                    status: status as any,
+                    type: type as any,
+                    limit: parseInt(limit as string),
+                    skip:
+                        (parseInt(page as string) - 1) *
+                        parseInt(limit as string),
+                }
+            );
 
-        res.status(200).json({
-            success: true,
-            data: {
-                notifications: result.notifications,
-                pagination: {
-                    current: parseInt(page as string),
-                    pages: Math.ceil(result.total / parseInt(limit as string)),
-                    total: result.total,
+            res.status(200).json({
+                success: true,
+                data: {
+                    notifications: result.notifications,
+                    pagination: {
+                        current: parseInt(page as string),
+                        pages: Math.ceil(
+                            result.total / parseInt(limit as string)
+                        ),
+                        total: result.total,
+                    },
                 },
-            },
-        });
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                error: "Socket.IO not available",
+            });
+        }
     } catch (error) {
         console.error("Error fetching notifications:", error);
         res.status(500).json({
@@ -87,21 +97,28 @@ export const markNotificationAsRead = async (
             return;
         }
 
-        const notificationService = new NotificationService(req.io);
-        const success = await notificationService.markAsRead(
-            id,
-            user._id.toString()
-        );
+        if (req.io) {
+            const notificationService = new NotificationService(req.io);
+            const success = await notificationService.markAsRead(
+                id,
+                user._id?.toString() || ""
+            );
 
-        if (success) {
-            res.status(200).json({
-                success: true,
-                message: "Notification marked as read",
-            });
+            if (success) {
+                res.status(200).json({
+                    success: true,
+                    message: "Notification marked as read",
+                });
+            } else {
+                res.status(404).json({
+                    success: false,
+                    error: "Notification not found or already read",
+                });
+            }
         } else {
-            res.status(404).json({
+            res.status(500).json({
                 success: false,
-                error: "Notification not found or already read",
+                error: "Socket.IO not available",
             });
         }
     } catch (error) {
@@ -131,7 +148,7 @@ export const markAllNotificationsAsRead = async (
         }
 
         // Determine recipient ID based on user role and request
-        let recipientId = user._id.toString();
+        let recipientId = user._id?.toString() || "";
         let actualRecipientType: "user" | "agency" = "user";
 
         if (recipientType === "agency" && user.agency) {
@@ -139,16 +156,23 @@ export const markAllNotificationsAsRead = async (
             actualRecipientType = "agency";
         }
 
-        const notificationService = new NotificationService(req.io);
-        const count = await notificationService.markAllAsRead(
-            recipientId,
-            actualRecipientType
-        );
+        if (req.io) {
+            const notificationService = new NotificationService(req.io);
+            const count = await notificationService.markAllAsRead(
+                recipientId,
+                actualRecipientType
+            );
 
-        res.status(200).json({
-            success: true,
-            message: `${count} notifications marked as read`,
-        });
+            res.status(200).json({
+                success: true,
+                message: `${count} notifications marked as read`,
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                error: "Socket.IO not available",
+            });
+        }
     } catch (error) {
         console.error("Error marking all notifications as read:", error);
         res.status(500).json({
@@ -176,7 +200,7 @@ export const getUnreadCount = async (
         }
 
         // Determine recipient ID based on user role and request
-        let recipientId = user._id.toString();
+        let recipientId = user._id?.toString() || "";
         let actualRecipientType: "user" | "agency" = "user";
 
         if (recipientType === "agency" && user.agency) {
@@ -184,16 +208,23 @@ export const getUnreadCount = async (
             actualRecipientType = "agency";
         }
 
-        const notificationService = new NotificationService(req.io);
-        const count = await notificationService.getUnreadCount(
-            recipientId,
-            actualRecipientType
-        );
+        if (req.io) {
+            const notificationService = new NotificationService(req.io);
+            const count = await notificationService.getUnreadCount(
+                recipientId,
+                actualRecipientType
+            );
 
-        res.status(200).json({
-            success: true,
-            data: { unreadCount: count },
-        });
+            res.status(200).json({
+                success: true,
+                data: { unreadCount: count },
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                error: "Socket.IO not available",
+            });
+        }
     } catch (error) {
         console.error("Error getting unread count:", error);
         res.status(500).json({
@@ -220,13 +251,20 @@ export const triggerOverdueNotifications = async (
             return;
         }
 
-        const scheduledService = new ScheduledNotificationService(req.io);
-        await scheduledService.triggerOverdueNotifications();
+        if (req.io) {
+            const scheduledService = new ScheduledNotificationService(req.io);
+            await scheduledService.triggerOverdueNotifications();
 
-        res.status(200).json({
-            success: true,
-            message: "Overdue notifications triggered successfully",
-        });
+            res.status(200).json({
+                success: true,
+                message: "Overdue notifications triggered successfully",
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                error: "Socket.IO not available",
+            });
+        }
     } catch (error) {
         console.error("Error triggering overdue notifications:", error);
         res.status(500).json({
@@ -252,13 +290,21 @@ export const triggerUnassignedNotifications = async (
             return;
         }
 
-        const scheduledService = new ScheduledNotificationService(req.io);
-        await scheduledService.triggerUnassignedNotifications();
+        if (req.io) {
+            const scheduledService = new ScheduledNotificationService(req.io);
+            await scheduledService.triggerUnassignedNotifications();
 
-        res.status(200).json({
-            success: true,
-            message: "Unassigned issue notifications triggered successfully",
-        });
+            res.status(200).json({
+                success: true,
+                message:
+                    "Unassigned issue notifications triggered successfully",
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                error: "Socket.IO not available",
+            });
+        }
     } catch (error) {
         console.error("Error triggering unassigned notifications:", error);
         res.status(500).json({
@@ -300,13 +346,20 @@ export const triggerWeeklySummary = async (
             return;
         }
 
-        const scheduledService = new ScheduledNotificationService(req.io);
-        await scheduledService.triggerWeeklySummary(agencyId);
+        if (req.io) {
+            const scheduledService = new ScheduledNotificationService(req.io);
+            await scheduledService.triggerWeeklySummary(agencyId);
 
-        res.status(200).json({
-            success: true,
-            message: "Weekly summary triggered successfully",
-        });
+            res.status(200).json({
+                success: true,
+                message: "Weekly summary triggered successfully",
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                error: "Socket.IO not available",
+            });
+        }
     } catch (error) {
         console.error("Error triggering weekly summary:", error);
         res.status(500).json({

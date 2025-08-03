@@ -1,6 +1,7 @@
 import express, { Router } from 'express';
 import clerkAuth from '../middleware/clerkAuth';
 import agencyAuth from '../middleware/agencyAuth';
+import { AgencyAuthenticatedRequest } from "../types/express";
 import {
     createAgency,
     getAllAgencies,
@@ -36,23 +37,29 @@ router.post("/login", loginAgency);
 router.post("/verify-session", verifyAgencySession);
 
 // Agency dashboard routes (require agency session authentication)
-router.get("/my-issues", agencyAuth, getMyAgencyIssues);
-router.get("/my-stats", agencyAuth, getMyAgencyStats);
-router.put("/issues/:id/status", agencyAuth, updateIssueStatusByAgency);
+router.get("/my-issues", agencyAuth, (req, res) => {
+    return getMyAgencyIssues(req as AgencyAuthenticatedRequest, res);
+});
+router.get("/my-stats", agencyAuth, (req, res) => {
+    return getMyAgencyStats(req as AgencyAuthenticatedRequest, res);
+});
+router.put("/issues/:id/status", agencyAuth, (req, res) => {
+    return updateIssueStatusByAgency(req as AgencyAuthenticatedRequest, res);
+});
 
 // All other routes require Clerk authentication
 router.use(clerkAuth);
 
 // Agency CRUD operations
-router.post('/', createAgency);
-router.get('/', getAllAgencies);
-router.get('/:id', getAgencyById);
-router.put('/:id', updateAgency);
-router.delete('/:id', deleteAgency);
+router.post("/", createAgency);
+router.get("/", getAllAgencies);
+router.get("/:id", getAgencyById);
+router.put("/:id", updateAgency);
+router.delete("/:id", deleteAgency);
 
-// Agency-specific operations (require agency authentication)
-router.get('/:id/issues', agencyAuth, getAgencyIssues);
-router.get('/:id/stats', agencyAuth, getAgencyStats);
+// Agency-specific operations (use clerk auth from router.use above)
+router.get("/:id/issues", getAgencyIssues);
+router.get("/:id/stats", getAgencyStats);
 router.post('/assign-issue', assignIssueToAgency);
 
 export default router;

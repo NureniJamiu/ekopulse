@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import User, { IUser } from '../models/User';
 import Agency from '../models/Agency';
-import { AuthenticatedRequest } from '../middleware/clerkAuth';
+import { AuthenticatedRequest } from "../types/express";
 import crypto from 'crypto';
 
 export const getOrCreateUser = async (req: AuthenticatedRequest, res: Response): Promise<void> => {

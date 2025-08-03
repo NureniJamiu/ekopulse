@@ -13,10 +13,10 @@ cloudinary.config({
 });
 
 interface UploadOptions {
-  resource_type?: string;
-  folder?: string;
-  transformation?: any[];
-  quality?: string;
+    resource_type?: "raw" | "auto" | "image" | "video";
+    folder?: string;
+    transformation?: any[];
+    quality?: string;
 }
 
 const uploadToCloudinary = async (
