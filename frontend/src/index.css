@@ -44,6 +44,23 @@
   .status-resolved {
     @apply bg-green-100 text-green-800;
   }
+
+  /* Map Filters Draggable Component */
+  .map-filters-dragging {
+    @apply cursor-grabbing;
+  }
+
+  .map-filters-handle {
+    @apply cursor-grab;
+  }
+
+  .map-filters-handle:active {
+    @apply cursor-grabbing;
+  }
+
+  .map-filters-minimized {
+    @apply hover:shadow-lg transform hover:scale-105 transition-all duration-200;
+  }
 }
 
 /* Leaflet overrides */

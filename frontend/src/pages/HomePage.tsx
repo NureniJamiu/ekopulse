@@ -73,47 +73,45 @@ const HomePage: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col bg-gray-50 relative">
-      {/* Agency Landing Banner for unauthenticated users - positioned absolutely */}
-      <AgencyLandingBanner />
+      <div className="flex flex-col bg-gray-50 relative">
+          {/* Agency Landing Banner for unauthenticated users - positioned absolutely */}
+          <AgencyLandingBanner />
 
-      <div className="flex" style={{ height: 'calc(100vh - 64px)' }}>
-        {/* Main Map Area */}
-        <div className="flex-1 relative">
-        {/* Map Filters */}
-        <div className="absolute top-4 left-4 z-10">
-          <MapFilters />
-        </div>
+          <div className="flex" style={{ height: "calc(100vh - 64px)" }}>
+              {/* Main Map Area */}
+              <div className="flex-1 relative">
+                  {/* Map Filters - now self-positioning */}
+                  <MapFilters />
 
-        {/* Location-based Report Button */}
-        <div className="absolute bottom-8 right-6 md:bottom-8 md:right-8 z-20">
-          <LocationReportButton />
-        </div>
+                  {/* Location-based Report Button */}
+                  <div className="absolute bottom-8 right-6 md:bottom-8 md:right-8 z-20">
+                      <LocationReportButton />
+                  </div>
 
-        {/* Map Component */}
-        <MapComponent />
+                  {/* Map Component */}
+                  <MapComponent />
 
-        {/* Issue Report Modal */}
-        {isReportModalOpen && (
-          <IssueReportModal
-            isOpen={isReportModalOpen}
-            onClose={closeReportModal}
-            onIssueCreated={handleIssueCreated}
-          />
-        )}
+                  {/* Issue Report Modal */}
+                  {isReportModalOpen && (
+                      <IssueReportModal
+                          isOpen={isReportModalOpen}
+                          onClose={closeReportModal}
+                          onIssueCreated={handleIssueCreated}
+                      />
+                  )}
+              </div>
+
+              {/* Issue Detail Panel */}
+              {selectedIssue && (
+                  <div className="w-96 bg-white shadow-lg border-l border-gray-200">
+                      <IssueDetailPanel
+                          issue={selectedIssue}
+                          onUpdate={updateIssue}
+                      />
+                  </div>
+              )}
+          </div>
       </div>
-
-      {/* Issue Detail Panel */}
-      {selectedIssue && (
-        <div className="w-96 bg-white shadow-lg border-l border-gray-200">
-          <IssueDetailPanel
-            issue={selectedIssue}
-            onUpdate={updateIssue}
-          />
-        </div>
-      )}
-      </div>
-    </div>
   );
 };
 
