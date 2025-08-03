@@ -1,6 +1,6 @@
 import { Server as SocketIOServer } from 'socket.io';
 import { Document } from 'mongoose';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 
 interface AuthedUser {
   id: string;
