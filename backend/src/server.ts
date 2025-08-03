@@ -23,15 +23,40 @@ import logger from './utils/logger';
 const app: Application = express();
 const server = createServer(app);
 
+// Configure allowed origins based on environment
+const getAllowedOrigins = () => {
+    const origins = [];
+
+    // Add environment-specific frontend URL
+    if (process.env.FRONTEND_URL) {
+        origins.push(process.env.FRONTEND_URL);
+    }
+
+    // Add production domains
+    if (process.env.NODE_ENV === 'production') {
+        origins.push('https://ekopulse.vercel.app');
+        origins.push('https://ekopulse-frontend.vercel.app'); // In case you have this too
+    } else {
+        // Development origins
+        origins.push('http://localhost:5173');
+        origins.push('http://localhost:3000');
+        origins.push('http://127.0.0.1:5173');
+    }
+
+    return origins;
+};
+
 // Only initialize Socket.IO for non-Vercel environments
 let io: SocketIOServer | null = null;
 if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
     io = new SocketIOServer(server, {
         cors: {
-            origin: process.env.FRONTEND_URL || "http://localhost:5173",
+            origin: getAllowedOrigins(),
             methods: ["GET", "POST"],
         },
     });
+} else {
+    logger.info("WebSocket connection skipped in production environment");
 }
 
 connectDB();
@@ -43,7 +68,19 @@ app.use(
 );
 app.use(
     cors({
-        origin: process.env.FRONTEND_URL || "http://localhost:5173",
+        origin: (origin, callback) => {
+            const allowedOrigins = getAllowedOrigins();
+
+            // Allow requests with no origin (mobile apps, Postman, etc.)
+            if (!origin) return callback(null, true);
+
+            if (allowedOrigins.includes(origin)) {
+                callback(null, true);
+            } else {
+                logger.warn(`CORS blocked origin: ${origin}. Allowed origins: ${allowedOrigins.join(', ')}`);
+                callback(new Error('Not allowed by CORS'));
+            }
+        },
         credentials: true,
         methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allowedHeaders: [
@@ -66,6 +103,22 @@ app.use("/api/", limiter);
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+// Handle preflight requests explicitly
+app.options('*', (req: Request, res: Response) => {
+    const allowedOrigins = getAllowedOrigins();
+    const origin = req.headers.origin;
+
+    if (!origin || allowedOrigins.includes(origin)) {
+        res.header('Access-Control-Allow-Origin', origin || '*');
+        res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, Accept, Origin');
+        res.header('Access-Control-Allow-Credentials', 'true');
+        res.sendStatus(200);
+    } else {
+        res.sendStatus(403);
+    }
+});
 
 app.use((req: Request, res: Response, next: NextFunction) => {
     req.io = io || undefined;
