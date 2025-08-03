@@ -59,7 +59,7 @@ export const useWebSocket = (
         // Don't initialize WebSocket in production if it's likely to fail
         const isProduction = import.meta.env.PROD;
         const wsUrl = WS_URL;
-        
+
         // Check if WebSocket URL is available and valid
         if (!wsUrl || (isProduction && wsUrl.includes('vercel.app'))) {
             logger.info("WebSocket connection skipped in production environment");
