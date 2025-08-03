@@ -56,9 +56,23 @@ export const useWebSocket = (
     }, [onNotification]);
 
     useEffect(() => {
+        // Don't initialize WebSocket in production if it's likely to fail
+        const isProduction = import.meta.env.PROD;
+        const wsUrl = WS_URL;
+        
+        // Check if WebSocket URL is available and valid
+        if (!wsUrl || (isProduction && wsUrl.includes('vercel.app'))) {
+            logger.info("WebSocket connection skipped in production environment");
+            setIsConnected(false);
+            setSocket(null);
+            return;
+        }
+
         // Initialize socket connection
-        const newSocket = io(WS_URL, {
+        const newSocket = io(wsUrl, {
             transports: ["websocket", "polling"],
+            timeout: 5000, // 5 second timeout
+            retries: 3,
         });
 
         newSocket.on("connect", () => {
@@ -80,8 +94,12 @@ export const useWebSocket = (
         });
 
         newSocket.on("connect_error", (error) => {
-            console.error("❌ WebSocket connection error:", error);
+            console.warn("⚠️ WebSocket connection failed (this is expected in serverless environments):", error.message);
             setIsConnected(false);
+            // Don't throw error in production, just log it
+            if (!isProduction) {
+                console.error("WebSocket connection error details:", error);
+            }
         });
 
         // Listen for new issues
@@ -168,7 +186,9 @@ export const useWebSocket = (
 
         // Cleanup on unmount
         return () => {
-            newSocket.close();
+            if (newSocket) {
+                newSocket.close();
+            }
         };
     }, [user]); // Only depend on user, not the callback functions
 
