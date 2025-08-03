@@ -204,8 +204,10 @@ export const createIssue = async (
                     assignmentResult.reason
                 );
             }
+        }
 
-            // Emit real-time update to all users
+        // Emit real-time update to all users
+        if (req.io) {
             req.io.emit("new_issue", issue);
         }
 

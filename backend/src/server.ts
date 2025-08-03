@@ -21,12 +21,16 @@ import logger from './utils/logger';
 const app: Application = express();
 const server = createServer(app);
 
-const io = new SocketIOServer(server, {
-    cors: {
-        origin: process.env.FRONTEND_URL || "http://localhost:5173",
-        methods: ["GET", "POST"],
-    },
-});
+// Only initialize Socket.IO for non-Vercel environments
+let io: SocketIOServer | null = null;
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+    io = new SocketIOServer(server, {
+        cors: {
+            origin: process.env.FRONTEND_URL || "http://localhost:5173",
+            methods: ["GET", "POST"],
+        },
+    });
+}
 
 connectDB();
 
@@ -62,7 +66,7 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 app.use((req: Request, res: Response, next) => {
-    req.io = io;
+    req.io = io || undefined;
     next();
 });
 
@@ -81,10 +85,12 @@ app.get("/api/health", (req: Request, res: Response) => {
 
 app.use(errorHandler);
 
-initializeSocketServer(io);
+if (io) {
+    initializeSocketServer(io);
 
-const scheduledNotificationService = new ScheduledNotificationService(io);
-scheduledNotificationService.startScheduledTasks();
+    const scheduledNotificationService = new ScheduledNotificationService(io);
+    scheduledNotificationService.startScheduledTasks();
+}
 
 const PORT = process.env.PORT || 5000;
 

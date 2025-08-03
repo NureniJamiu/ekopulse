@@ -2,11 +2,26 @@ import { Server as SocketIOServer } from 'socket.io';
 import { Document } from 'mongoose';
 import { Request } from 'express';
 
+interface AuthedUser {
+  id: string;
+  emailAddresses: Array<{ emailAddress: string }>;
+  firstName?: string;
+  lastName?: string;
+}
+
+interface IAgency extends Document {
+  _id: any;
+  name: string;
+  email: string;
+  verified: boolean;
+}
+
 declare global {
   namespace Express {
     interface Request {
-      io: SocketIOServer;
-      agency?: Document & any;
+      io?: SocketIOServer;
+      user?: AuthedUser;
+      authenticatedAgency?: IAgency;
     }
   }
 }
