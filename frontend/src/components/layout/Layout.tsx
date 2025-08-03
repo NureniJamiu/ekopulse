@@ -2,8 +2,14 @@ import React, { useMemo, useState } from 'react';
 import { useUser, UserButton } from '@clerk/clerk-react';
 import { useAuthUser } from '../../hooks/useAuthUser';
 import { useAgencyAuth } from '../../hooks/useAgencyAuth';
-import { MapPin, Shield, FileText, Menu, Building2, UserPlus } from 'lucide-react';
-import RoleSwitcher from '../common/RoleSwitcher';
+import {
+    MapPin,
+    Shield,
+    FileText,
+    Menu,
+    Building2,
+    UserPlus,
+} from "lucide-react";
 import NotificationBell from "../common/NotificationBell";
 
 interface LayoutProps {
@@ -258,10 +264,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             >
                 {children}
             </main>
-
-            {/* Development Role Switcher - Only show when signed in */}
-            {/* Role Switcher - Only show for Clerk authenticated users */}
-            {isSignedIn && <RoleSwitcher />}
         </div>
     );
 };

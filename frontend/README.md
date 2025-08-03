@@ -27,8 +27,7 @@ src/
 │   │   ├── ErrorBoundary.tsx
 │   │   ├── LoadingSpinner.tsx
 │   │   ├── LocationReportButton.tsx
-│   │   ├── NotificationBell.tsx
-│   │   └── RoleSwitcher.tsx
+│   │   └── NotificationBell.tsx
 │   ├── issues/         # Issue-related components
 │   │   ├── IssueCard.tsx
 │   │   ├── IssueDetailPanel.tsx
