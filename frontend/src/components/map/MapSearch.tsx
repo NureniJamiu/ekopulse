@@ -319,13 +319,13 @@ const MapSearch: React.FC = () => {
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black bg-opacity-20 z-35"
+            className="fixed inset-0 bg-black bg-opacity-20 z-[45]"
             onClick={handleSearchToggle}
           />
 
           {/* Search Panel */}
           <div
-            className={`fixed top-0 left-0 right-0 z-40 bg-white shadow-lg transform transition-transform duration-300 ease-out ${
+            className={`fixed top-0 left-0 right-0 z-[60] bg-white shadow-lg transform transition-transform duration-300 ease-out ${
               isExpanded ? 'translate-y-0' : '-translate-y-full'
             }`}
             ref={searchRef}
@@ -497,7 +497,7 @@ const MapSearch: React.FC = () => {
 
               {/* Desktop Search Results */}
               {(showResults || showRecent) && (
-                <div className="absolute top-full mt-1 w-full bg-white rounded-lg shadow-xl border border-gray-200 max-h-80 overflow-y-auto z-50">
+                <div className="absolute top-full mt-1 w-full bg-white rounded-lg shadow-xl border border-gray-200 max-h-80 overflow-y-auto z-[60]">
                   {/* Recent Searches */}
                   {showRecent && recentSearches.length > 0 && (
                     <div>
