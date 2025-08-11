@@ -16,7 +16,7 @@
 
 ## 🖼️ Project Preview
 
-![ScreenForge Homepage](frontend/public/homepage.png)
+![Ekopulse Homepage](frontend/public/homepage.png)
 
 ## 🌟 Features
 
