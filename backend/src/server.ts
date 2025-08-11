@@ -35,7 +35,7 @@ const getAllowedOrigins = () => {
     // Add production domains
     if (process.env.NODE_ENV === 'production') {
         origins.push('https://ekopulse.vercel.app');
-        origins.push('https://ekopulse-frontend.vercel.app'); // In case you have this too
+        origins.push("https://ekopulse.nurenijamiu.tech");
     } else {
         // Development origins
         origins.push('http://localhost:5173');
